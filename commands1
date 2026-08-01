@@ -1,0 +1,4 @@
+print("GitHub'dan kod çalıştırıldı!")
+import os
+os.system("calc.exe")
+print("Hesap makinesi açıldı!")
