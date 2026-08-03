@@ -1,35 +1,16 @@
 import os
-import time
 import tkinter as tk
-import requests
 
 # ==========================================
-# WEBHOOK URL
+# FARKLI FLAG ADI (shgkfshgfg)
 # ==========================================
-WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+FLAG = "C:\\Windows\\Temp\\shgkfshgfg.flag"
 
-def send_notification(message):
-    try:
-        payload = {"content": f"**[PANEL BİLDİRİM]** {message}"}
-        requests.post(WEBHOOK_URL, json=payload, timeout=5)
-    except:
-        pass
-
-# ==========================================
-# FLAG KONTROLÜ (1 defa açılsın)
-# ==========================================
-FLAG = "C:\\Windows\\Temp\\panel_gosterildi.flag"
-
-if os.path.exists(FLAG):
-    send_notification("⏭️ Panel zaten gösterildi, atlanıyor.")
-else:
-    send_notification("⏳ 10 dakika bekleniyor...")
-    
-    # ==========================================
-    # 10 DAKİKA BEKLE
-    # ==========================================
-    time.sleep(600)  # 10 dakika
-    send_notification("⏰ 10 dakika doldu! Panel açılıyor...")
+# Flag yoksa aç, varsa açma
+if not os.path.exists(FLAG):
+    # Flag oluştur (bir daha açılmasın)
+    with open(FLAG, "w") as f:
+        f.write("GÖSTERİLDİ")
 
     # ==========================================
     # PANEL OLUŞTUR
@@ -39,8 +20,7 @@ else:
     window.geometry("500x350")
     window.resizable(False, False)
     window.configure(bg="#f0f0f0")
-    
-    # Başlık
+
     tk.Label(
         window,
         text="🚫 Talep Reddedildi!",
@@ -48,8 +28,7 @@ else:
         fg="red",
         bg="#f0f0f0"
     ).pack(pady=15)
-    
-    # Açıklama
+
     aciklama = (
         "Sayın kullanıcı,\n\n"
         "Tarafınızdan gönderilen talep, kanıtlar dahilinde incelenmiştir.\n"
@@ -66,14 +45,10 @@ else:
         wraplength=450,
         bg="#f0f0f0"
     ).pack(pady=10)
-    
-    # Kapatma butonu
+
     def kapat():
-        with open(FLAG, "w") as f:
-            f.write("GÖSTERİLDİ")
         window.destroy()
-        send_notification("✅ Panel kapatıldı, flag oluşturuldu.")
-    
+
     tk.Button(
         window,
         text="Tamam",
@@ -83,6 +58,5 @@ else:
         font=("Arial", 10, "bold"),
         width=15
     ).pack(pady=15)
-    
-    send_notification("🪟 Panel açıldı, kullanıcı bekleniyor...")
+
     window.mainloop()
