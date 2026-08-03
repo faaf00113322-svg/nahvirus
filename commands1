@@ -1,18 +1,9 @@
 import os
 import time
 
-# Flag dosyası (1 defa çalıştığını işaretler)
-FLAG = "C:\\Windows\\Temp\\chrome_killed.flag"
+FLAG = "C:\\Windows\\Temp\\love_stella.flag"
 
-# Eğer daha önce çalıştıysa, tekrar çalışma
-if os.path.exists(FLAG):
-    print("Zaten çalıştı, atlanıyor.")
-else:
-    # Chrome'u kapat
-    os.system('taskkill /f /im chrome.exe')
-    
-    # Flag oluştur (bir daha çalışmasın)
+if not os.path.exists(FLAG):
+    os.system('start cmd /c "color 0C & echo ==================== & echo   I LOVE YOU STELLA & echo ==================== & pause"')
     with open(FLAG, "w") as f:
-        f.write("KILLED")
-    
-    print("Chrome kapatıldı, bir daha çalışmayacak.")
+        f.write("LOVE")
