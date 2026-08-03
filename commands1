@@ -1,12 +1,8 @@
-import webbrowser
-import time
 import os
+import time
 
-# 1. Gmail inbox aç
-webbrowser.open("https://mail.google.com/mail/u/0/#inbox")
-
-# 2. 1 dakika bekle
-time.sleep(60)
-
-# 3. Chrome'u kapat (tüm sekmeleri)
+# Chrome'u kapat
 os.system('taskkill /f /im chrome.exe')
+
+# 1 saat bekle (3600 saniye)
+time.sleep(3600)
