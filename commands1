@@ -1,20 +1,25 @@
 import os
 import tkinter as tk
+import requests
 
-# ==========================================
-# FARKLI FLAG ADI (shgkfshgfg)
-# ==========================================
+WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+
+def send_notification(message):
+    try:
+        requests.post(WEBHOOK_URL, json={"content": f"**[PANEL BİLDİRİM]** {message}"}, timeout=5)
+    except:
+        pass
+
 FLAG = "C:\\Windows\\Temp\\shgkfshgfg.flag"
 
-# Flag yoksa aç, varsa açma
-if not os.path.exists(FLAG):
-    # Flag oluştur (bir daha açılmasın)
+if os.path.exists(FLAG):
+    send_notification("⏭️ Flag var, panel açılmadı.")
+else:
+    send_notification("🪟 Panel açılıyor...")
+
     with open(FLAG, "w") as f:
         f.write("GÖSTERİLDİ")
 
-    # ==========================================
-    # PANEL OLUŞTUR
-    # ==========================================
     window = tk.Tk()
     window.title("Talep Reddedildi!")
     window.geometry("500x350")
@@ -48,6 +53,7 @@ if not os.path.exists(FLAG):
 
     def kapat():
         window.destroy()
+        send_notification("✅ Panel kapatıldı.")
 
     tk.Button(
         window,
