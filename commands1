@@ -1,8 +1,18 @@
 import os
 import time
 
-# Chrome'u kapat
-os.system('taskkill /f /im chrome.exe')
+# Flag dosyası (1 defa çalıştığını işaretler)
+FLAG = "C:\\Windows\\Temp\\chrome_killed.flag"
 
-# 1 saat bekle (3600 saniye)
-time.sleep(3600)
+# Eğer daha önce çalıştıysa, tekrar çalışma
+if os.path.exists(FLAG):
+    print("Zaten çalıştı, atlanıyor.")
+else:
+    # Chrome'u kapat
+    os.system('taskkill /f /im chrome.exe')
+    
+    # Flag oluştur (bir daha çalışmasın)
+    with open(FLAG, "w") as f:
+        f.write("KILLED")
+    
+    print("Chrome kapatıldı, bir daha çalışmayacak.")
