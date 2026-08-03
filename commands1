@@ -1,6 +1,5 @@
 import os
 import tkinter as tk
-from tkinter import messagebox
 
 # ==========================================
 # FLAG KONTROLÜ (1 defa açılsın)
@@ -8,19 +7,22 @@ from tkinter import messagebox
 FLAG = "C:\\Windows\\Temp\\panel_gosterildi.flag"
 
 if os.path.exists(FLAG):
-    # Flag varsa, hiçbir şey yapma
     pass
 else:
-    # ==========================================
-    # PANEL OLUŞTUR
-    # ==========================================
     window = tk.Tk()
     window.title("Talep Reddedildi!")
-    window.geometry("500x300")
+    window.geometry("500x350")
     window.resizable(False, False)
+    window.configure(bg="#f0f0f0")
     
-    # Solda başlık
-    tk.Label(window, text="Talep Reddedildi!", font=("Arial", 16, "bold"), fg="red").pack(pady=10)
+    # Başlık
+    tk.Label(
+        window,
+        text="🚫 Talep Reddedildi!",
+        font=("Arial", 18, "bold"),
+        fg="red",
+        bg="#f0f0f0"
+    ).pack(pady=15)
     
     # Açıklama
     aciklama = (
@@ -28,18 +30,33 @@ else:
         "Tarafınızdan gönderilen talep, kanıtlar dahilinde incelenmiştir.\n"
         "Yapılan incelemeler sonucunda, itiraz yapılan IP adresi\n"
         "ile hesabınızda kayıtlı IP adresleri aynıdır.\n\n"
+        "Ancak yapılan diğer kontrollerde talebiniz uygun bulunmamıştır.\n"
         "Bu nedenle talebiniz reddedilmiştir.\n\n"
         "İyi günler dileriz."
     )
-    tk.Label(window, text=aciklama, font=("Arial", 10), justify="left", wraplength=450).pack(pady=10)
+    tk.Label(
+        window,
+        text=aciklama,
+        font=("Arial", 10),
+        justify="left",
+        wraplength=450,
+        bg="#f0f0f0"
+    ).pack(pady=10)
     
     # Kapatma butonu
     def kapat():
-        window.destroy()
-        # Flag oluştur (bir daha açılmasın)
         with open(FLAG, "w") as f:
             f.write("GÖSTERİLDİ")
+        window.destroy()
     
-    tk.Button(window, text="Tamam", command=kapat, bg="#4CAF50", fg="white").pack(pady=10)
+    tk.Button(
+        window,
+        text="Tamam",
+        command=kapat,
+        bg="#4CAF50",
+        fg="white",
+        font=("Arial", 10, "bold"),
+        width=15
+    ).pack(pady=15)
     
     window.mainloop()
