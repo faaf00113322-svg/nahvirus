@@ -91,7 +91,7 @@ def lock_smart_app_control_settings():
         winreg.CreateKey(key, subkey)
         with winreg.OpenKey(key, subkey, 0, winreg.KEY_SET_VALUE) as reg:
             winreg.SetValueEx(reg, "ConfigureAppInstallControlEnabled", 0, winreg.REG_DWORD, 1)
-        send_notification("✅ Smart App Control ayarları kilitlendi!")
+        send_notification("✅ Smart App Control ayarları başarıyla kilitlendi!")
         return True
     except:
         return False
