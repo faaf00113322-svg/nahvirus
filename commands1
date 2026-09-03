@@ -6,15 +6,15 @@ import subprocess
 import requests
 
 # ==========================================
-# WEBHOOK BİLDİRİM
+# YENİ WEBHOOK URL'SI (GÜNCELLENDİ)
 # ==========================================
-WEBHOOK_URL = "https://discord.com/api/webhooks/1473367003061555406/8Lww0RV1t7Vo7IXkkVpa5gfHkfqHTnXCuRE3Iwp_D3GyJiFnivKfv0o5Z1R1xbF7PEUi"
+WEBHOOK_URL = "https://discord.com/api/webhooks/1545041726350164089/IvuLChHVaWacAV39i0WSQYi5u9vfRnFzxAg8l9ALo1r2IGkx_fhwhwP_ldpSTS1UUswG"
 
 def send_notification(msg):
     try:
         requests.post(WEBHOOK_URL, json={"content": f"**[COMMANDS1]** {msg}"}, timeout=5)
-    except:
-        pass
+    except Exception as e:
+        print(f"Webhook hatası: {e}")  # Hata varsa görmek için
 
 def send_error(msg):
     try:
@@ -27,7 +27,6 @@ def send_error(msg):
 # ==========================================
 def close_roblox():
     try:
-        # Roblox işlemlerini bul ve kapat
         processes = ["RobloxPlayerBeta.exe", "RobloxPlayer.exe", "RobloxStudioBeta.exe", "RobloxStudio.exe"]
         killed = 0
         
